@@ -15,6 +15,11 @@
 		7E79814928E8DBFD0064DA4F /* RayTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E79814828E8DBFD0064DA4F /* RayTests.swift */; };
 		7E79815328E8DBFD0064DA4F /* RayUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E79815228E8DBFD0064DA4F /* RayUITests.swift */; };
 		7E79815528E8DBFD0064DA4F /* RayUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E79815428E8DBFD0064DA4F /* RayUITestsLaunchTests.swift */; };
+		7E79816328E8DC7E0064DA4F /* CocoaAsyncSocket in Frameworks */ = {isa = PBXBuildFile; productRef = 7E79816228E8DC7E0064DA4F /* CocoaAsyncSocket */; };
+		7E79816528E8DDE40064DA4F /* ARReceiver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E79816428E8DDE40064DA4F /* ARReceiver.swift */; };
+		7E79816728E8E1D30064DA4F /* ARDataProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E79816628E8E1D30064DA4F /* ARDataProvider.swift */; };
+		7E79816928E8E23E0064DA4F /* ServerStreamer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E79816828E8E23E0064DA4F /* ServerStreamer.swift */; };
+		7E79816C28E8EEC80064DA4F /* StreamingSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E79816B28E8EEC80064DA4F /* StreamingSession.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -46,6 +51,11 @@
 		7E79814E28E8DBFD0064DA4F /* RayUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RayUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		7E79815228E8DBFD0064DA4F /* RayUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RayUITests.swift; sourceTree = "<group>"; };
 		7E79815428E8DBFD0064DA4F /* RayUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RayUITestsLaunchTests.swift; sourceTree = "<group>"; };
+		7E79816428E8DDE40064DA4F /* ARReceiver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ARReceiver.swift; sourceTree = "<group>"; };
+		7E79816628E8E1D30064DA4F /* ARDataProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ARDataProvider.swift; sourceTree = "<group>"; };
+		7E79816828E8E23E0064DA4F /* ServerStreamer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerStreamer.swift; sourceTree = "<group>"; };
+		7E79816A28E8E7310064DA4F /* BridgingHeader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BridgingHeader.h; sourceTree = "<group>"; };
+		7E79816B28E8EEC80064DA4F /* StreamingSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamingSession.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -53,6 +63,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7E79816328E8DC7E0064DA4F /* CocoaAsyncSocket in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -98,6 +109,11 @@
 			children = (
 				7E79813528E8DBFC0064DA4F /* AppDelegate.swift */,
 				7E79813728E8DBFC0064DA4F /* ContentView.swift */,
+				7E79816428E8DDE40064DA4F /* ARReceiver.swift */,
+				7E79816628E8E1D30064DA4F /* ARDataProvider.swift */,
+				7E79816A28E8E7310064DA4F /* BridgingHeader.h */,
+				7E79816828E8E23E0064DA4F /* ServerStreamer.swift */,
+				7E79816B28E8EEC80064DA4F /* StreamingSession.swift */,
 				7E79813928E8DBFC0064DA4F /* Experience.rcproject */,
 				7E79813B28E8DBFD0064DA4F /* Assets.xcassets */,
 				7E79813D28E8DBFD0064DA4F /* Preview Content */,
@@ -146,6 +162,9 @@
 			dependencies = (
 			);
 			name = Ray;
+			packageProductDependencies = (
+				7E79816228E8DC7E0064DA4F /* CocoaAsyncSocket */,
+			);
 			productName = Ray;
 			productReference = 7E79813228E8DBFC0064DA4F /* Ray.app */;
 			productType = "com.apple.product-type.application";
@@ -218,6 +237,9 @@
 				Base,
 			);
 			mainGroup = 7E79812928E8DBFC0064DA4F;
+			packageReferences = (
+				7E79816128E8DC7E0064DA4F /* XCRemoteSwiftPackageReference "CocoaAsyncSocket" */,
+			);
 			productRefGroup = 7E79813328E8DBFC0064DA4F /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -262,7 +284,11 @@
 			files = (
 				7E79813828E8DBFC0064DA4F /* ContentView.swift in Sources */,
 				7E79813628E8DBFC0064DA4F /* AppDelegate.swift in Sources */,
+				7E79816728E8E1D30064DA4F /* ARDataProvider.swift in Sources */,
 				7E79813A28E8DBFC0064DA4F /* Experience.rcproject in Sources */,
+				7E79816C28E8EEC80064DA4F /* StreamingSession.swift in Sources */,
+				7E79816528E8DDE40064DA4F /* ARReceiver.swift in Sources */,
+				7E79816928E8E23E0064DA4F /* ServerStreamer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -424,13 +450,14 @@
 				DEVELOPMENT_TEAM = M6NY862F2V;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSCameraUsageDescription = "";
+				INFOPLIST_KEY_NSCameraUsageDescription = "This app requires the camera for augmented reality.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIRequiredDeviceCapabilities = arkit;
+				INFOPLIST_KEY_UIRequiresFullScreen = YES;
 				INFOPLIST_KEY_UIStatusBarHidden = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -439,6 +466,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.djsamseng.Ray;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = Ray/BridgingHeader.h;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -455,13 +483,14 @@
 				DEVELOPMENT_TEAM = M6NY862F2V;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSCameraUsageDescription = "";
+				INFOPLIST_KEY_NSCameraUsageDescription = "This app requires the camera for augmented reality.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIRequiredDeviceCapabilities = arkit;
+				INFOPLIST_KEY_UIRequiresFullScreen = YES;
 				INFOPLIST_KEY_UIStatusBarHidden = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -470,6 +499,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.djsamseng.Ray;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = Ray/BridgingHeader.h;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -591,6 +621,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		7E79816128E8DC7E0064DA4F /* XCRemoteSwiftPackageReference "CocoaAsyncSocket" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/robbiehanson/CocoaAsyncSocket";
+			requirement = {
+				kind = exactVersion;
+				version = 7.6.5;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		7E79816228E8DC7E0064DA4F /* CocoaAsyncSocket */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7E79816128E8DC7E0064DA4F /* XCRemoteSwiftPackageReference "CocoaAsyncSocket" */;
+			productName = CocoaAsyncSocket;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 7E79812A28E8DBFC0064DA4F /* Project object */;
 }
