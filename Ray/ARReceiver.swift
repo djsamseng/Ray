@@ -8,32 +8,31 @@
 import Foundation
 import SwiftUI
 import Combine
+import RealityKit
 import ARKit
 
 class ARReceiver: NSObject, ARSessionDelegate {
     weak var delegate: ARDataProvider?
-    private var arSession: ARSession? = nil
+    private(set) var arSession: ARSession = ARSession()
     override init() {
         super.init()
-        //self.arSession!.delegate = self
-        //self.start()
-    }
-    
-    func setArSession(arSession: ARSession) {
-        self.arSession = arSession
-        self.arSession!.delegate = self
+        self.arSession.delegate = self
         self.start()
     }
     
     func start() {
-        guard ARWorldTrackingConfiguration.supportsFrameSemantics([.sceneDepth, .smoothedSceneDepth]) else { return }
+        guard ARWorldTrackingConfiguration.supportsFrameSemantics([.sceneDepth, .smoothedSceneDepth]) else {
+            print("===== Could not start WorldTrackingConfiguration =====")
+            return
+        }
         let config = ARWorldTrackingConfiguration()
+        config.planeDetection = [.horizontal]
         config.frameSemantics = [.sceneDepth, .smoothedSceneDepth]
-        self.arSession?.run(config)
+        self.arSession.run(config)
     }
     
     func pause() {
-        self.arSession?.pause()
+        self.arSession.pause()
     }
     
     func session(_ session:ARSession, didUpdate frame: ARFrame) {
