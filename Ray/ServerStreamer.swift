@@ -59,7 +59,7 @@ class ServerStreamer: NSObject, GCDAsyncSocketDelegate {
     func streamData(data: Data) {
         for (key, client) in self.clients {
             if client.connected {
-                client.dataToSend = (data as NSData).copy() as? Data
+                client.dataToSend = data
             }
             else {
                 self.clients.removeValue(forKey: key)

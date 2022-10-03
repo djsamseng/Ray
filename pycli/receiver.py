@@ -1,4 +1,5 @@
 
+import argparse
 import base64
 import cv2
 import json
@@ -33,7 +34,7 @@ def recvall(socket, buffer_size=4096, header_size=HEADER_SIZE, footer_size=FOOTE
       else:
         print("Unknown:", chunk)
 
-def main(skip: int):
+def livemode(skip: int, do_record: bool):
   server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
   port = 10001
   if True:
@@ -46,7 +47,6 @@ def main(skip: int):
     server_socket.bind((addr, port))
 
   itr = 0
-  do_record = True
   recording = False
   while True:
     message = recvall(server_socket)
@@ -92,6 +92,19 @@ def show_recordings():
     cv2.waitKey(500)
   cv2.destroyAllWindows()
 
+def parse_args():
+  parser = argparse.ArgumentParser()
+  parser.add_argument("--record", dest="record", action="store_true")
+  parser.add_argument("--showrecordings", dest="showrecordings", action="store_true")
+  parser.add_argument("--skip", dest="skip", default=3, help="The number of frames to skip when showing the live images. This allows cv2.waitKey(1) to not take too much time and allowing the stream to keep up")
+  return parser.parse_args()
+
+def main():
+  args = parse_args()
+  if args.showrecordings:
+    show_recordings()
+  else:
+    livemode(skip=args.skip, do_record=args.record)
+
 if __name__ == "__main__":
-  show_recordings()
-  #main(skip=3)
+  main()
