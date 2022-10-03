@@ -65,6 +65,11 @@ func sampleBufferFromPixelBuffer(pixelBuffer: CVPixelBuffer, seconds: Double) ->
     return buffer
 }
 
+struct ARJSON: Codable {
+    var colorImage: Data?
+    var depthImage: Data?
+}
+
 class ARDataProvider {
     let context = CIContext(options: nil)
     let arReceiver: ARReceiver = ARReceiver()
@@ -84,20 +89,28 @@ class ARDataProvider {
         self.arReceiver.pause()
     }
     
-    func onNewARData(arFrame: ARFrame) {
-        //guard let colorImage: CVPixelBuffer = arFrame.sceneDepth?.depthMap else { return }
-        let colorImage: CVPixelBuffer = arFrame.capturedImage
-        
-        guard let sampleBuffer = sampleBufferFromPixelBuffer(pixelBuffer: colorImage, seconds: 0) else { return }
-        guard let capture: CVImageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
+    func cvPixelBufferToData(cvPixelBuffer: CVPixelBuffer) -> Data? {
+        guard let sampleBuffer = sampleBufferFromPixelBuffer(pixelBuffer: cvPixelBuffer, seconds: 0) else { return nil }
+        guard let capture: CVImageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return nil }
         let sourceImage = CIImage(cvImageBuffer: capture, options: nil)
-        guard let cgImage = self.context.createCGImage(sourceImage, from: sourceImage.extent) else { return }
+        guard let cgImage = self.context.createCGImage(sourceImage, from: sourceImage.extent) else { return nil }
         let image = UIImage(cgImage: cgImage)
-        self.streamPixelBuffer(image: image)
+        guard let data = image.jpegData(compressionQuality: 0) else { return nil }
+        return data
     }
     
-    func streamPixelBuffer(image: UIImage) {
-        guard let data = image.jpegData(compressionQuality: 0) else { return }
+    func onNewARData(arFrame: ARFrame) {
+        guard let depthImage: CVPixelBuffer = arFrame.sceneDepth?.depthMap else { return }
+        let colorImage: CVPixelBuffer = arFrame.capturedImage
+        guard let colorData = cvPixelBufferToData(cvPixelBuffer: colorImage) else { return }
+        guard let depthData = cvPixelBufferToData(cvPixelBuffer: depthImage) else { return }
+        let json = ARJSON(colorImage: colorData, depthImage: depthData)
+        let encoder = JSONEncoder()
+        let data = try! encoder.encode(json)
         self.serverStreamer.streamData(data: data)
+    }
+    
+    func onNewAudioData(sampleBuffer: CMSampleBuffer) {
+        // https://stackoverflow.com/questions/63583179/can-you-play-audio-directly-from-a-cmsamplebuffer
     }
 }

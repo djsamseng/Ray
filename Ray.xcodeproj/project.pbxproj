@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7E4A292A28EB3FC6008C41AF /* ServerStreamerUDP.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E4A292928EB3FC6008C41AF /* ServerStreamerUDP.swift */; };
+		7E4A292C28EB4261008C41AF /* StreamingData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E4A292B28EB4261008C41AF /* StreamingData.swift */; };
 		7E79813628E8DBFC0064DA4F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E79813528E8DBFC0064DA4F /* AppDelegate.swift */; };
 		7E79813828E8DBFC0064DA4F /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E79813728E8DBFC0064DA4F /* ContentView.swift */; };
 		7E79813A28E8DBFC0064DA4F /* Experience.rcproject in Sources */ = {isa = PBXBuildFile; fileRef = 7E79813928E8DBFC0064DA4F /* Experience.rcproject */; };
@@ -41,6 +43,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		7E4A292928EB3FC6008C41AF /* ServerStreamerUDP.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerStreamerUDP.swift; sourceTree = "<group>"; };
+		7E4A292B28EB4261008C41AF /* StreamingData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamingData.swift; sourceTree = "<group>"; };
 		7E79813228E8DBFC0064DA4F /* Ray.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Ray.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7E79813528E8DBFC0064DA4F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		7E79813728E8DBFC0064DA4F /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -58,6 +62,7 @@
 		7E79816A28E8E7310064DA4F /* BridgingHeader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BridgingHeader.h; sourceTree = "<group>"; };
 		7E79816B28E8EEC80064DA4F /* StreamingSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamingSession.swift; sourceTree = "<group>"; };
 		7E79816D28E906FD0064DA4F /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		7E89ADCC28EA3D67003EACDB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -110,13 +115,16 @@
 		7E79813428E8DBFC0064DA4F /* Ray */ = {
 			isa = PBXGroup;
 			children = (
+				7E89ADCC28EA3D67003EACDB /* Info.plist */,
 				7E79813528E8DBFC0064DA4F /* AppDelegate.swift */,
 				7E79813728E8DBFC0064DA4F /* ContentView.swift */,
 				7E79816428E8DDE40064DA4F /* ARReceiver.swift */,
 				7E79816628E8E1D30064DA4F /* ARDataProvider.swift */,
 				7E79816A28E8E7310064DA4F /* BridgingHeader.h */,
 				7E79816828E8E23E0064DA4F /* ServerStreamer.swift */,
+				7E4A292928EB3FC6008C41AF /* ServerStreamerUDP.swift */,
 				7E79816B28E8EEC80064DA4F /* StreamingSession.swift */,
+				7E4A292B28EB4261008C41AF /* StreamingData.swift */,
 				7E79813928E8DBFC0064DA4F /* Experience.rcproject */,
 				7E79813B28E8DBFD0064DA4F /* Assets.xcassets */,
 				7E79813D28E8DBFD0064DA4F /* Preview Content */,
@@ -286,11 +294,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7E4A292C28EB4261008C41AF /* StreamingData.swift in Sources */,
 				7E79813828E8DBFC0064DA4F /* ContentView.swift in Sources */,
 				7E79813628E8DBFC0064DA4F /* AppDelegate.swift in Sources */,
 				7E79816728E8E1D30064DA4F /* ARDataProvider.swift in Sources */,
 				7E79813A28E8DBFC0064DA4F /* Experience.rcproject in Sources */,
 				7E79816C28E8EEC80064DA4F /* StreamingSession.swift in Sources */,
+				7E4A292A28EB3FC6008C41AF /* ServerStreamerUDP.swift in Sources */,
 				7E79816528E8DDE40064DA4F /* ARReceiver.swift in Sources */,
 				7E79816928E8E23E0064DA4F /* ServerStreamer.swift in Sources */,
 			);
@@ -454,7 +464,10 @@
 				DEVELOPMENT_TEAM = M6NY862F2V;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Ray/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "This app requires the camera for augmented reality.";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Broadcasting AR Data";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This app requires the microphone for voice commands and teaching";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIRequiredDeviceCapabilities = arkit;
@@ -487,7 +500,10 @@
 				DEVELOPMENT_TEAM = M6NY862F2V;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Ray/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "This app requires the camera for augmented reality.";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Broadcasting AR Data";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This app requires the microphone for voice commands and teaching";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIRequiredDeviceCapabilities = arkit;
