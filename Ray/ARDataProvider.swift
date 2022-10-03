@@ -65,9 +65,21 @@ func sampleBufferFromPixelBuffer(pixelBuffer: CVPixelBuffer, seconds: Double) ->
     return buffer
 }
 
+extension simd_float4x4: Codable {
+    public init(from decoder: Decoder) throws {
+        var container = try decoder.unkeyedContainer()
+        try self.init(container.decode([SIMD4<Float>].self))
+    }
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.unkeyedContainer()
+        try container.encode([columns.0,columns.1, columns.2, columns.3])
+    }
+}
+
 struct ARJSON: Codable {
     var colorImage: Data?
     var depthImage: Data?
+    var cameraTranslation: simd_float4x4?
 }
 
 class ARDataProvider {
@@ -100,11 +112,17 @@ class ARDataProvider {
     }
     
     func onNewARData(arFrame: ARFrame) {
+        // let transform = arFrame.camera.transform
+        // let position = transform.columns.3
+        // Hold the iPhone in landscape mode
+        // [right/left, up/down, back/forward] in directions +/- in meters
+        // colums 0,1,2 are for camera rotation. See https://stackoverflow.com/questions/45437037/arkit-what-do-the-different-columns-in-transform-matrix-represent
+        // print("Camera position:", position)
         guard let depthImage: CVPixelBuffer = arFrame.sceneDepth?.depthMap else { return }
         let colorImage: CVPixelBuffer = arFrame.capturedImage
         guard let colorData = cvPixelBufferToData(cvPixelBuffer: colorImage) else { return }
         guard let depthData = cvPixelBufferToData(cvPixelBuffer: depthImage) else { return }
-        let json = ARJSON(colorImage: colorData, depthImage: depthData)
+        let json = ARJSON(colorImage: colorData, depthImage: depthData, cameraTranslation: arFrame.camera.transform)
         let encoder = JSONEncoder()
         let data = try! encoder.encode(json)
         self.serverStreamer.streamData(data: data)

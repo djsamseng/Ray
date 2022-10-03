@@ -68,6 +68,7 @@ class StreamingSession {
     fileprivate let footersData = StreamingData.getJpegFrameFooters()
     
     private let frameHeaderSize: Int = 100
+    private let frameFooterSize: Int = 2
 
     var id: Int
     var connected = true
@@ -122,6 +123,9 @@ class StreamingSession {
                         let frameHeadersData = StreamingData.getJpegFrameHeaders(dataCount: data.count, size: self.frameHeaderSize)
                         if frameHeadersData.count != self.frameHeaderSize {
                             print("==== Invalid Frame Header Size. Acutal=\(frameHeadersData.count) Desired=\(self.frameHeaderSize)")
+                        }
+                        if self.footersData.count != self.frameFooterSize {
+                            print("==== Invalid Frame Footer Size. Acutal=\(frameHeadersData.count) Desired=\(self.frameHeaderSize)")
                         }
                         self.client.write(frameHeadersData, withTimeout: -1, tag: 0)
                         self.client.write(data, withTimeout: -1, tag: 0)
