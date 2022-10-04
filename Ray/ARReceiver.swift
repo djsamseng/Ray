@@ -16,6 +16,7 @@ class ARReceiver: NSObject, ARSessionDelegate {
     private(set) var arSession: ARSession = ARSession()
     override init() {
         super.init()
+        print("Created ARReceiver")
         self.arSession.delegate = self
         self.start()
     }

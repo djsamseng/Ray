@@ -101,16 +101,6 @@ class ARDataProvider {
         self.arReceiver.pause()
     }
     
-    func cvPixelBufferToData(cvPixelBuffer: CVPixelBuffer) -> Data? {
-        guard let sampleBuffer = sampleBufferFromPixelBuffer(pixelBuffer: cvPixelBuffer, seconds: 0) else { return nil }
-        guard let capture: CVImageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return nil }
-        let sourceImage = CIImage(cvImageBuffer: capture, options: nil)
-        guard let cgImage = self.context.createCGImage(sourceImage, from: sourceImage.extent) else { return nil }
-        let image = UIImage(cgImage: cgImage)
-        guard let data = image.jpegData(compressionQuality: 0) else { return nil }
-        return data
-    }
-    
     func onNewARData(arFrame: ARFrame) {
         // let transform = arFrame.camera.transform
         // let position = transform.columns.3
@@ -120,8 +110,8 @@ class ARDataProvider {
         // print("Camera position:", position)
         guard let depthImage: CVPixelBuffer = arFrame.sceneDepth?.depthMap else { return }
         let colorImage: CVPixelBuffer = arFrame.capturedImage
-        guard let colorData = cvPixelBufferToData(cvPixelBuffer: colorImage) else { return }
-        guard let depthData = cvPixelBufferToData(cvPixelBuffer: depthImage) else { return }
+        guard let colorData = ImageHelpers.cvPixelBufferToData(cvPixelBuffer: colorImage) else { return }
+        guard let depthData = ImageHelpers.cvPixelBufferToData(cvPixelBuffer: depthImage) else { return }
         let json = ARJSON(colorImage: colorData, depthImage: depthData, cameraTranslation: arFrame.camera.transform)
         let encoder = JSONEncoder()
         let data = try! encoder.encode(json)

@@ -54,7 +54,7 @@ def livemode(skip: int, do_record: bool):
       data = json.loads(message)
       color_image = data["colorImage"]
       depth_image = data["depthImage"]
-      camera_translation = np.array(data["cameraTranslation"], dtype=np.float32)
+      # camera_translation = np.array(data["cameraTranslation"], dtype=np.float32)
       # camera_position = camera_translation[0, 3, :]
       # [right/left, up/down, back/forward]
       # See https://stackoverflow.com/questions/45437037/arkit-what-do-the-different-columns-in-transform-matrix-represent
@@ -69,7 +69,8 @@ def livemode(skip: int, do_record: bool):
         print("===== Recording =====")
         recording = True
       if recording and itr % 10 == 0:
-        np.savez("depth"+str(itr), color=im, depth=im_depth, camera=camera_translation)
+        pass
+        #np.savez("depth"+str(itr), color=im, depth=im_depth, camera=camera_translation)
       if itr >= 200 and do_record:
         break
 
