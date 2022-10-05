@@ -7,6 +7,7 @@ from multiprocessing import Process, Queue, Value
 import pyaudio
 import socket
 import numpy as np
+import time
 
 GLOBAL_HEADER_SIZE = 375 # See StreamingSession.swift headerSize: Int = 375
 HEADER_SIZE = 100 # Set in StreamingSession.swift frameHeaderSize: Int = 100
@@ -59,7 +60,7 @@ def recvall(socket, buffer_size=4096, header_size=HEADER_SIZE, footer_size=FOOTE
       bytes_left_to_receive -= len(chunk)
 
       if bytes_left_to_receive == 0:
-        socket.recv(2)
+        footer = socket.recv(footer_size)
         return b''.join(fragments)
     else:
       chunk = socket.recv(header_size)
@@ -71,12 +72,16 @@ def recvall(socket, buffer_size=4096, header_size=HEADER_SIZE, footer_size=FOOTE
         bytes_left_to_receive = message_size
       else:
         print("Unknown:", chunk)
+        return chunk
 
-def livemode(skip: int, do_record: bool):
-  queue = Queue()
-  stop_signal = Value('i', 0)
-  p2 = Process(target=receive_audio_p2, args=(queue, stop_signal))
-  p2.start()
+
+def livemode(skip: int, do_record: bool, armode: bool):
+  do_play_audio = True
+  if do_play_audio:
+    queue = Queue()
+    stop_signal = Value('i', 0)
+    p2 = Process(target=receive_audio_p2, args=(queue, stop_signal))
+    p2.start()
   server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
   port = 10001
   if True:
@@ -92,6 +97,9 @@ def livemode(skip: int, do_record: bool):
   recording = False
   while True:
     message = recvall(server_socket)
+    if len(message) == 0:
+      print("Quitting due to empty message")
+      break
     try:
       data = json.loads(message)
       color_image = data["colorImage"]
@@ -106,11 +114,20 @@ def livemode(skip: int, do_record: bool):
         # [right/left, up/down, back/forward]
         # See https://stackoverflow.com/questions/45437037/arkit-what-do-the-different-columns-in-transform-matrix-represent
       np_color = np.frombuffer(base64.b64decode(color_image), dtype=np.uint8)
-      np_depth = np.frombuffer(base64.b64decode(depth_image), dtype=np.uint8)
       im = cv2.imdecode(np_color, cv2.IMREAD_COLOR)
-      im_depth = cv2.imdecode(np_depth, cv2.IMREAD_COLOR)
       cv2.imshow("Color", im)
-      cv2.imshow("Depth", im_depth)
+      if armode:
+        # 256, 192
+        np_depth = np.frombuffer(base64.b64decode(depth_image), dtype=np.float32).reshape((-1, 256)).astype(np.float32)
+        scaled_depth = np_depth / (np.max(np_depth) - np.min(np_depth))
+        cv2.imshow("Depth", np_depth)
+        cv2.imshow("Scaled Depth", scaled_depth)
+      else:
+        # 320, 240
+        np_depth = np.frombuffer(base64.b64decode(depth_image), dtype=np.float32).reshape((-1, 320))#.astype(np.float32)
+        scaled_depth = np_depth / (np.max(np_depth) - np.min(np_depth))
+        cv2.imshow("Depth", np_depth)
+        cv2.imshow("Scaled Depth", scaled_depth)
 
       if itr >= 100 and do_record and not recording:
         print("===== Recording =====")
@@ -130,10 +147,11 @@ def livemode(skip: int, do_record: bool):
       print("Failed to load json:", e)
       print(message)
 
-  stop_signal.value = 1
-  while not queue.empty():
-    queue.get()
-  p2.join()
+  if do_play_audio:
+    stop_signal.value = 1
+    while not queue.empty():
+      queue.get()
+    p2.join()
   cv2.destroyAllWindows()
 
 def show_recordings():
@@ -148,7 +166,9 @@ def show_recordings():
 def parse_args():
   parser = argparse.ArgumentParser()
   parser.add_argument("--record", dest="record", action="store_true")
+  parser.add_argument("--playaudio", dest="playaudio", action="store_true")
   parser.add_argument("--showrecordings", dest="showrecordings", action="store_true")
+  parser.add_argument("--armode", dest="armode", action="store_true")
   parser.add_argument("--skip", dest="skip", default=3, help="The number of frames to skip when showing the live images. This allows cv2.waitKey(1) to not take too much time and allowing the stream to keep up")
   return parser.parse_args()
 
@@ -156,8 +176,12 @@ def main():
   args = parse_args()
   if args.showrecordings:
     show_recordings()
+  elif args.playaudio:
+    queue = Queue()
+    stop_signal = Value('i', 0)
+    receive_audio_p2(queue, stop_signal)
   else:
-    livemode(skip=args.skip, do_record=args.record)
+    livemode(skip=args.skip, do_record=args.record, armode=args.armode)
 
 if __name__ == "__main__":
   main()

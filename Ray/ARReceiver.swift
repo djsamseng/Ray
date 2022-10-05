@@ -45,5 +45,6 @@ class ARReceiver: NSObject, ARSessionDelegate {
     }
     
     func session(_ session: ARSession, didOutputAudioSampleBuffer audioSampleBuffer: CMSampleBuffer) {
+        self.delegate?.onNewAudioData(sampleBuffer: audioSampleBuffer)
     }
 }

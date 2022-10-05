@@ -83,9 +83,11 @@ struct ARJSON: Codable {
 }
 
 class ARDataProvider {
-    let context = CIContext(options: nil)
+    private let context = CIContext(options: nil)
     let arReceiver: ARReceiver = ARReceiver()
-    let serverStreamer: ServerStreamer = ServerStreamer()
+    private let serverStreamer: ServerStreamer = ServerStreamer()
+    private let audioServerStreamer = ServerStreamer(port: 10002)
+    private var didPrintAudioFormat = false
     
     static var instance = ARDataProvider()
     
@@ -108,10 +110,14 @@ class ARDataProvider {
         // [right/left, up/down, back/forward] in directions +/- in meters
         // colums 0,1,2 are for camera rotation. See https://stackoverflow.com/questions/45437037/arkit-what-do-the-different-columns-in-transform-matrix-represent
         // print("Camera position:", position)
+        
         guard let depthImage: CVPixelBuffer = arFrame.sceneDepth?.depthMap else { return }
+        if CVPixelBufferGetPixelFormatType(depthImage) != kCVPixelFormatType_DepthFloat32 {
+            print("Invalid depth type:", CVPixelBufferGetPixelFormatType(depthImage))
+        }
         let colorImage: CVPixelBuffer = arFrame.capturedImage
         guard let colorData = ImageHelpers.cvPixelBufferToData(cvPixelBuffer: colorImage) else { return }
-        guard let depthData = ImageHelpers.cvPixelBufferToData(cvPixelBuffer: depthImage) else { return }
+        let depthData = ImageHelpers.convertDepthDataMapToArray(depthDataMap: depthImage)
         let json = ARJSON(colorImage: colorData, depthImage: depthData, cameraTranslation: arFrame.camera.transform)
         let encoder = JSONEncoder()
         let data = try! encoder.encode(json)
@@ -119,6 +125,20 @@ class ARDataProvider {
     }
     
     func onNewAudioData(sampleBuffer: CMSampleBuffer) {
-        // https://stackoverflow.com/questions/63583179/can-you-play-audio-directly-from-a-cmsamplebuffer
+        self.printAudioFormatOnce(sampleBuffer: sampleBuffer)
+        let audioData = AudioHelpers.getAudioData(sampleBuffer: sampleBuffer)
+        
+        let audioCaptureData = AudioCaptureData(audioData: audioData)
+        let encoder = JSONEncoder()
+        let data = try! encoder.encode(audioCaptureData)
+        self.audioServerStreamer.streamData(data: data)
+    }
+    
+    func printAudioFormatOnce(sampleBuffer: CMSampleBuffer) {
+        if didPrintAudioFormat {
+            return
+        }
+        didPrintAudioFormat = true
+        AudioHelpers.printAudioFormat(sampleBuffer: sampleBuffer)
     }
 }

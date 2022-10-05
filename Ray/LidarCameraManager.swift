@@ -29,34 +29,31 @@ extension matrix_float3x3: Codable {
     }
 }
 
-class AudioCaptureData: Encodable {
-    var audioData: Data
-    init(audioData: Data) {
-        self.audioData = audioData
-    }
-}
+
 
 class LidarCameraCaptureData: Encodable {
-    var depthImage: Data?
+    var depthImage: Data
     var colorImage: Data?
     var userAcceleration: [Double]?
+    var userDirection: [Double]?
     var cameraIntrinsics: matrix_float3x3
     var cameraReferenceDimesnions: CGSize
+    var pixelSize: Float
     
-    init(depth: CVPixelBuffer? = nil,
-         color: CVImageBuffer? = nil,
-         userAcceleration: [Double]? = nil,
-         cameraIntrinsics: matrix_float3x3 = matrix_float3x3(),
-         cameraReferenceDimesnions: CGSize = .zero) {
-        if let depth = depth {
-            self.depthImage = ImageHelpers.cvPixelBufferToData(cvPixelBuffer: depth)
-        }
-        if let color = color {
-            self.colorImage = ImageHelpers.cvImageBufferToData(cvImageBuffer: color)
-        }
+    init(depth: Data,
+         color: CVImageBuffer,
+         userAcceleration: [Double]?,
+         userDirection: [Double]?,
+         cameraIntrinsics: matrix_float3x3,
+         cameraReferenceDimesnions: CGSize,
+         pixelSize: Float) {
+        self.depthImage = depth
+        self.colorImage = ImageHelpers.cvImageBufferToData(cvImageBuffer: color)
         self.userAcceleration = userAcceleration
+        self.userDirection = userDirection
         self.cameraIntrinsics = cameraIntrinsics
         self.cameraReferenceDimesnions = cameraReferenceDimesnions
+        self.pixelSize = pixelSize
     }
 }
 
@@ -128,6 +125,7 @@ class LidarCameraController: NSObject, ObservableObject, AVCaptureDataOutputSync
     
     private func setupCaptureInput() throws {
         guard let lidarDevice = AVCaptureDevice.default(.builtInLiDARDepthCamera, for:. video, position: .back) else {
+            print("No lidar device")
             throw ConfigurationError.lidarDeviceUnavailable
         }
         guard let format = (lidarDevice.formats.last { format in
@@ -187,29 +185,12 @@ class LidarCameraController: NSObject, ObservableObject, AVCaptureDataOutputSync
         self.session.stopRunning()
     }
     
-    func getAudioData(sampleBuffer: CMSampleBuffer) -> Data {
-        var audioBufferList = AudioBufferList(mNumberBuffers: 1, mBuffers: AudioBuffer(mNumberChannels: 0, mDataByteSize: 0, mData: nil))
-        var blockBuffer: CMBlockBuffer?
-
-        CMSampleBufferGetAudioBufferListWithRetainedBlockBuffer(
-            sampleBuffer,
-            bufferListSizeNeededOut: nil,
-            bufferListOut: &audioBufferList,
-            bufferListSize: MemoryLayout<AudioBufferList>.size,
-            blockBufferAllocator: nil,
-            blockBufferMemoryAllocator: nil,
-            flags: kCMSampleBufferFlag_AudioBufferList_Assure16ByteAlignment,
-            blockBufferOut: &blockBuffer)
-
-        let audioBuffer = audioBufferList.mBuffers
-        let data : Data = Data.init(bytes: audioBuffer.mData!, count: Int(audioBuffer.mDataByteSize))
-        return (data as NSData).copy() as! Data
-    }
+    
     
     func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
         if output == self.audioOutput {
             self.printAudioFormatOnce(sampleBuffer: sampleBuffer)
-            let audioData = self.getAudioData(sampleBuffer: sampleBuffer)
+            let audioData = AudioHelpers.getAudioData(sampleBuffer: sampleBuffer)
             
             let audioCaptureData = AudioCaptureData(audioData: audioData)
             let encoder = JSONEncoder()
@@ -230,10 +211,19 @@ class LidarCameraController: NSObject, ObservableObject, AVCaptureDataOutputSync
             return
         }
         var userAcceleration: [Double]? = nil
+        var userDirection: [Double]? = nil
         if let motionData = self.motionManager.deviceMotion {
             userAcceleration = [motionData.userAcceleration.x, motionData.userAcceleration.y, motionData.userAcceleration.z]
+            userDirection = [motionData.attitude.roll, motionData.attitude.pitch, motionData.attitude.yaw]
         }
-        let captureData = LidarCameraCaptureData(depth: syncedDepthData.depthData.depthDataMap, color: pixelBuffer, userAcceleration: userAcceleration, cameraIntrinsics: cameraCalibrationData.intrinsicMatrix, cameraReferenceDimesnions: cameraCalibrationData.intrinsicMatrixReferenceDimensions)
+        if syncedDepthData.depthData.depthDataType != kCVPixelFormatType_DepthFloat16 {
+            print("Unhandled depth type:", syncedDepthData.depthData.depthDataType)
+        }
+        
+        let depthFloatData = ImageHelpers.convertDepthDataToArray(depthData: syncedDepthData.depthData)
+        
+        
+        let captureData = LidarCameraCaptureData(depth: depthFloatData, color: pixelBuffer, userAcceleration: userAcceleration, userDirection: userDirection, cameraIntrinsics: cameraCalibrationData.intrinsicMatrix, cameraReferenceDimesnions: cameraCalibrationData.intrinsicMatrixReferenceDimensions, pixelSize: cameraCalibrationData.pixelSize)
         
         let encoder = JSONEncoder()
         let data = try! encoder.encode(captureData)
@@ -245,22 +235,6 @@ class LidarCameraController: NSObject, ObservableObject, AVCaptureDataOutputSync
             return
         }
         didPrintAudioFormat = true
-        guard let format = CMSampleBufferGetFormatDescription(sampleBuffer) else {
-            print("Could not get audio format description")
-            return
-        }
-        guard let audioDescription = CMAudioFormatDescriptionGetStreamBasicDescription(format) else {
-            print("Could not get audio stream basic description")
-            return
-        }
-        let numChannels = audioDescription.pointee.mChannelsPerFrame
-        let audioFormat = audioDescription.pointee.mFormatID
-        let bitsPerChannel = audioDescription.pointee.mBitsPerChannel
-        if audioFormat == kAudioFormatLinearPCM && numChannels == 1 && bitsPerChannel == 16 {
-            print("Audio Format: LinearPCM, 1 channel, 16 bits per channel")
-        }
-        else {
-            print("Unhandled audio format: \(audioFormat), \(numChannels) channels, \(bitsPerChannel) bits per channel")
-        }
+        AudioHelpers.printAudioFormat(sampleBuffer: sampleBuffer)
     }
 }
