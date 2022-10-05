@@ -3,11 +3,39 @@ import argparse
 import base64
 import cv2
 import json
+from multiprocessing import Process, Queue, Value
+import pyaudio
 import socket
 import numpy as np
 
 HEADER_SIZE = 100 # Set in StreamingSession.swift frameHeaderSize: Int = 100
 FOOTER_SIZE = 2 # Set in StreamingSession.swift frameFooterSize: Int = 2
+ADDR = "192.168.1.211"
+
+def play_audio(stream: pyaudio.Stream, np_data:np.ndarray):
+  raw_bytes = np_data.tobytes()
+  stream.write(raw_bytes, num_frames=np_data.shape[0])
+
+def receive_audio_p2(queue: Queue, stop_signal_value: Value):
+  server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+  port = 10002
+  addr = ADDR
+  server_socket.connect((addr, port))
+  p = pyaudio.PyAudio()
+  stream = p.open(
+    format=pyaudio.paInt16,
+    channels=1,
+    rate=44100,
+    output=True)
+  while stop_signal_value.value == 0:
+    try:
+      message = recvall(server_socket)
+      data = json.loads(message)
+      audio_data = data["audioData"]
+      np_audio = np.frombuffer(base64.b64decode(audio_data), dtype=np.int16)
+      play_audio(stream=stream, np_data=np_audio)
+    except Exception as e:
+      print("Failed to parse audio:", e)
 
 def recvall(socket, buffer_size=4096, header_size=HEADER_SIZE, footer_size=FOOTER_SIZE):
   fragments = []
@@ -35,11 +63,15 @@ def recvall(socket, buffer_size=4096, header_size=HEADER_SIZE, footer_size=FOOTE
         print("Unknown:", chunk)
 
 def livemode(skip: int, do_record: bool):
+  queue = Queue()
+  stop_signal = Value('i', 0)
+  p2 = Process(target=receive_audio_p2, args=(queue, stop_signal))
+  p2.start()
   server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
   port = 10001
   if True:
     # TCP
-    addr = "192.168.1.211"
+    addr = ADDR
     server_socket.connect((addr, port))
   else:
     # UDP
@@ -82,6 +114,11 @@ def livemode(skip: int, do_record: bool):
     except Exception as e:
       print("Failed to load json:", e)
       print(message)
+
+  stop_signal.value = 1
+  while not queue.empty():
+    queue.get()
+  p2.join()
   cv2.destroyAllWindows()
 
 def show_recordings():

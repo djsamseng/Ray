@@ -41,8 +41,9 @@ class ServerStreamer: NSObject, GCDAsyncSocketDelegate {
     let clientQueue = DispatchQueue(label: "ClientQueue", attributes: .concurrent)
     let socketQueue = DispatchQueue(label: "SocketQueue", attributes: .concurrent)
     
-    let port: UInt16 = 10001
-    override init() {
+    let port: UInt16
+    init(port: UInt16 = 10001) {
+        self.port = port
         super.init()
         let ip = getIP()
         print("IP:", ip)
