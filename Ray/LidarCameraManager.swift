@@ -10,6 +10,7 @@ import SwiftUI
 import Combine
 import AVFoundation
 import CoreImage
+import CoreMotion
 
 func cvPixelBufferToCvImageBuffer(cvPixelBuffer: CVPixelBuffer) -> CVImageBuffer? {
     guard let sampleBuffer = sampleBufferFromPixelBuffer(pixelBuffer: cvPixelBuffer, seconds: 0) else { return nil }
@@ -38,11 +39,13 @@ class AudioCaptureData: Encodable {
 class LidarCameraCaptureData: Encodable {
     var depthImage: Data?
     var colorImage: Data?
+    var userAcceleration: [Double]?
     var cameraIntrinsics: matrix_float3x3
     var cameraReferenceDimesnions: CGSize
     
     init(depth: CVPixelBuffer? = nil,
          color: CVImageBuffer? = nil,
+         userAcceleration: [Double]? = nil,
          cameraIntrinsics: matrix_float3x3 = matrix_float3x3(),
          cameraReferenceDimesnions: CGSize = .zero) {
         if let depth = depth {
@@ -51,6 +54,7 @@ class LidarCameraCaptureData: Encodable {
         if let color = color {
             self.colorImage = ImageHelpers.cvImageBufferToData(cvImageBuffer: color)
         }
+        self.userAcceleration = userAcceleration
         self.cameraIntrinsics = cameraIntrinsics
         self.cameraReferenceDimesnions = cameraReferenceDimesnions
     }
@@ -71,6 +75,8 @@ class LidarCameraController: NSObject, ObservableObject, AVCaptureDataOutputSync
 
     private var didPrintAudioFormat = false
     
+    private var motionManager = CMMotionManager()
+    
     var isFilteringEnabled = true {
         didSet {
             self.depthOutput.isFilteringEnabled = isFilteringEnabled
@@ -85,12 +91,19 @@ class LidarCameraController: NSObject, ObservableObject, AVCaptureDataOutputSync
         //CVMetalTextureCacheCreate(kCFAllocatorDefault, nil, MetalEnvironment.shared.metalDevice, nil, &textureCache)
         super.init()
         print("Created LidarCameraController")
+        self.setupDeviceMotion()
         do {
             try self.setupSession()
         }
         catch {
             fatalError("Failed to setup lidar camera capture session")
         }
+    }
+    
+    private func setupDeviceMotion() {
+        self.motionManager.deviceMotionUpdateInterval = 1.0 / 100.0
+        self.motionManager.showsDeviceMovementDisplay = true
+        self.motionManager.startDeviceMotionUpdates(using: .xMagneticNorthZVertical)
     }
     
     private func setupSession() throws {
@@ -216,7 +229,11 @@ class LidarCameraController: NSObject, ObservableObject, AVCaptureDataOutputSync
             print("Failed to get pixelBuffer and cameraCalibrationData")
             return
         }
-        let captureData = LidarCameraCaptureData(depth: syncedDepthData.depthData.depthDataMap, color: pixelBuffer, cameraIntrinsics: cameraCalibrationData.intrinsicMatrix, cameraReferenceDimesnions: cameraCalibrationData.intrinsicMatrixReferenceDimensions)
+        var userAcceleration: [Double]? = nil
+        if let motionData = self.motionManager.deviceMotion {
+            userAcceleration = [motionData.userAcceleration.x, motionData.userAcceleration.y, motionData.userAcceleration.z]
+        }
+        let captureData = LidarCameraCaptureData(depth: syncedDepthData.depthData.depthDataMap, color: pixelBuffer, userAcceleration: userAcceleration, cameraIntrinsics: cameraCalibrationData.intrinsicMatrix, cameraReferenceDimesnions: cameraCalibrationData.intrinsicMatrixReferenceDimensions)
         
         let encoder = JSONEncoder()
         let data = try! encoder.encode(captureData)

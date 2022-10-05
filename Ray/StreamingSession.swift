@@ -67,6 +67,7 @@ class StreamingSession {
     fileprivate var queue: DispatchQueue
     fileprivate let footersData = StreamingData.getJpegFrameFooters()
     
+    private let headerSize: Int = 375
     private let frameHeaderSize: Int = 100
     private let frameFooterSize: Int = 2
 
@@ -100,6 +101,9 @@ class StreamingSession {
                     print("Sending headers [#\(self.id)]")
 
                     let headersData = StreamingData.getJpegHeaders()
+                    if headersData.count != self.headerSize {
+                        print("==== Invalid Frame Header Size. Actual=\(headersData.count) Desired=\(self.headerSize)")
+                    }
 
                     self.headersSent = true
                     self.client.write(headersData, withTimeout: -1, tag: 0)
@@ -122,10 +126,10 @@ class StreamingSession {
                     if let data = data {
                         let frameHeadersData = StreamingData.getJpegFrameHeaders(dataCount: data.count, size: self.frameHeaderSize)
                         if frameHeadersData.count != self.frameHeaderSize {
-                            print("==== Invalid Frame Header Size. Acutal=\(frameHeadersData.count) Desired=\(self.frameHeaderSize)")
+                            print("==== Invalid Frame Header Size. Actual=\(frameHeadersData.count) Desired=\(self.frameHeaderSize)")
                         }
                         if self.footersData.count != self.frameFooterSize {
-                            print("==== Invalid Frame Footer Size. Acutal=\(frameHeadersData.count) Desired=\(self.frameHeaderSize)")
+                            print("==== Invalid Frame Footer Size. Actual=\(frameHeadersData.count) Desired=\(self.frameHeaderSize)")
                         }
                         self.client.write(frameHeadersData, withTimeout: -1, tag: 0)
                         self.client.write(data, withTimeout: -1, tag: 0)

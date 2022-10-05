@@ -8,6 +8,7 @@ import pyaudio
 import socket
 import numpy as np
 
+GLOBAL_HEADER_SIZE = 375 # See StreamingSession.swift headerSize: Int = 375
 HEADER_SIZE = 100 # Set in StreamingSession.swift frameHeaderSize: Int = 100
 FOOTER_SIZE = 2 # Set in StreamingSession.swift frameFooterSize: Int = 2
 ADDR = "192.168.1.211"
@@ -21,6 +22,7 @@ def receive_audio_p2(queue: Queue, stop_signal_value: Value):
   port = 10002
   addr = ADDR
   server_socket.connect((addr, port))
+  recv_global_header(socket=server_socket)
   p = pyaudio.PyAudio()
   stream = p.open(
     format=pyaudio.paInt16,
@@ -36,6 +38,14 @@ def receive_audio_p2(queue: Queue, stop_signal_value: Value):
       play_audio(stream=stream, np_data=np_audio)
     except Exception as e:
       print("Failed to parse audio:", e)
+
+def recv_global_header(socket, global_header_size=GLOBAL_HEADER_SIZE):
+  bytes_left_to_receive = global_header_size
+  while True:
+    chunk = socket.recv(bytes_left_to_receive)
+    bytes_left_to_receive -= len(chunk)
+    if bytes_left_to_receive == 0:
+      return
 
 def recvall(socket, buffer_size=4096, header_size=HEADER_SIZE, footer_size=FOOTER_SIZE):
   fragments = []
@@ -77,7 +87,7 @@ def livemode(skip: int, do_record: bool):
     # UDP
     addr = ""
     server_socket.bind((addr, port))
-
+  recv_global_header(socket=server_socket)
   itr = 0
   recording = False
   while True:
@@ -86,10 +96,15 @@ def livemode(skip: int, do_record: bool):
       data = json.loads(message)
       color_image = data["colorImage"]
       depth_image = data["depthImage"]
-      # camera_translation = np.array(data["cameraTranslation"], dtype=np.float32)
-      # camera_position = camera_translation[0, 3, :]
-      # [right/left, up/down, back/forward]
-      # See https://stackoverflow.com/questions/45437037/arkit-what-do-the-different-columns-in-transform-matrix-represent
+      if "userAcceleration" in data:
+        userAcceleration = np.array(data["userAcceleration"], dtype=np.float32)
+        #print(data["userAcceleration"])
+      if "cameraTranslation" in data:
+        #print(data["cameraTranslation"])
+        camera_translation = np.array(data["cameraTranslation"], dtype=np.float32)
+        camera_position = camera_translation[0, 3, :]
+        # [right/left, up/down, back/forward]
+        # See https://stackoverflow.com/questions/45437037/arkit-what-do-the-different-columns-in-transform-matrix-represent
       np_color = np.frombuffer(base64.b64decode(color_image), dtype=np.uint8)
       np_depth = np.frombuffer(base64.b64decode(depth_image), dtype=np.uint8)
       im = cv2.imdecode(np_color, cv2.IMREAD_COLOR)
