@@ -85,8 +85,8 @@ struct ARJSON: Codable {
 class ARDataProvider {
     private let context = CIContext(options: nil)
     let arReceiver: ARReceiver = ARReceiver()
-    private let serverStreamer: ServerStreamer = ServerStreamer()
-    private let audioServerStreamer = ServerStreamer(port: 10002)
+    private let serverStreamer = ServerStreamer()
+    //private let audioServerStreamer = ServerStreamer(port: 10002)
     private var didPrintAudioFormat = false
     
     static var instance = ARDataProvider()
@@ -131,7 +131,7 @@ class ARDataProvider {
         let audioCaptureData = AudioCaptureData(audioData: audioData)
         let encoder = JSONEncoder()
         let data = try! encoder.encode(audioCaptureData)
-        self.audioServerStreamer.streamData(data: data)
+        //self.audioServerStreamer.streamData(data: data)
     }
     
     func printAudioFormatOnce(sampleBuffer: CMSampleBuffer) {

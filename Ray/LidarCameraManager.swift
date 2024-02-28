@@ -68,7 +68,7 @@ class LidarCameraController: NSObject, ObservableObject, AVCaptureDataOutputSync
     private var videoSync: AVCaptureDataOutputSynchronizer!
     
     private let serverStreamer = ServerStreamer()
-    private let audioServerStreamer = ServerStreamer(port: 10002)
+    //private let audioServerStreamer = ServerStreamer(port: 10002)
 
     private var didPrintAudioFormat = false
     
@@ -115,6 +115,7 @@ class LidarCameraController: NSObject, ObservableObject, AVCaptureDataOutputSync
     }
     
     private func setupAudioCaptureInput() throws {
+        return
         guard let audioDevice = AVCaptureDevice.default(for: .audio) else {
             print("audioDeviceUnavailable")
             throw ConfigurationError.audioDeviceUnavailable
@@ -195,7 +196,7 @@ class LidarCameraController: NSObject, ObservableObject, AVCaptureDataOutputSync
             let audioCaptureData = AudioCaptureData(audioData: audioData)
             let encoder = JSONEncoder()
             let data = try! encoder.encode(audioCaptureData)
-            self.audioServerStreamer.streamData(data: data)
+            //self.audioServerStreamer.streamData(data: data)
         }
     }
     
@@ -207,9 +208,10 @@ class LidarCameraController: NSObject, ObservableObject, AVCaptureDataOutputSync
         }
         guard let pixelBuffer = syncedVideoData.sampleBuffer.imageBuffer,
               let cameraCalibrationData = syncedDepthData.depthData.cameraCalibrationData else {
-            print("Failed to get pixelBuffer and cameraCalibrationData")
+            //print("Failed to get pixelBuffer and cameraCalibrationData")
             return
         }
+        //print("Success pixelBuffer")
         var userAcceleration: [Double]? = nil
         var userDirection: [Double]? = nil
         if let motionData = self.motionManager.deviceMotion {

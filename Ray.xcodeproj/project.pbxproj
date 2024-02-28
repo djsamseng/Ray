@@ -27,6 +27,9 @@
 		7E79816C28E8EEC80064DA4F /* StreamingSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E79816B28E8EEC80064DA4F /* StreamingSession.swift */; };
 		7E79816E28E906FD0064DA4F /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 7E79816D28E906FD0064DA4F /* README.md */; };
 		7E86B28428EE262000B75675 /* AudioHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E86B28328EE262000B75675 /* AudioHelpers.swift */; };
+		7EC103A22B8F380C00BBD875 /* CameraViewController2.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EC1039F2B8F380B00BBD875 /* CameraViewController2.swift */; };
+		7EC103A32B8F380C00BBD875 /* Queue2.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EC103A02B8F380B00BBD875 /* Queue2.swift */; };
+		7EC103A42B8F380C00BBD875 /* StreamingSession2.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EC103A12B8F380B00BBD875 /* StreamingSession2.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -71,6 +74,9 @@
 		7E79816D28E906FD0064DA4F /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		7E86B28328EE262000B75675 /* AudioHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioHelpers.swift; sourceTree = "<group>"; };
 		7E89ADCC28EA3D67003EACDB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		7EC1039F2B8F380B00BBD875 /* CameraViewController2.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CameraViewController2.swift; sourceTree = "<group>"; };
+		7EC103A02B8F380B00BBD875 /* Queue2.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Queue2.swift; sourceTree = "<group>"; };
+		7EC103A12B8F380B00BBD875 /* StreamingSession2.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StreamingSession2.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -124,6 +130,9 @@
 			isa = PBXGroup;
 			children = (
 				7E89ADCC28EA3D67003EACDB /* Info.plist */,
+				7EC1039F2B8F380B00BBD875 /* CameraViewController2.swift */,
+				7EC103A02B8F380B00BBD875 /* Queue2.swift */,
+				7EC103A12B8F380B00BBD875 /* StreamingSession2.swift */,
 				7E79813528E8DBFC0064DA4F /* AppDelegate.swift */,
 				7E79813728E8DBFC0064DA4F /* ContentView.swift */,
 				7E15DA7328ECCE0B009923C5 /* LidarContentView.swift */,
@@ -308,12 +317,15 @@
 			files = (
 				7E4A292C28EB4261008C41AF /* StreamingData.swift in Sources */,
 				7E15DA7428ECCE0B009923C5 /* LidarContentView.swift in Sources */,
+				7EC103A42B8F380C00BBD875 /* StreamingSession2.swift in Sources */,
 				7E79813828E8DBFC0064DA4F /* ContentView.swift in Sources */,
 				7E79813628E8DBFC0064DA4F /* AppDelegate.swift in Sources */,
 				7E79816728E8E1D30064DA4F /* ARDataProvider.swift in Sources */,
 				7E79813A28E8DBFC0064DA4F /* Experience.rcproject in Sources */,
 				7E79816C28E8EEC80064DA4F /* StreamingSession.swift in Sources */,
+				7EC103A32B8F380C00BBD875 /* Queue2.swift in Sources */,
 				7E4A292A28EB3FC6008C41AF /* ServerStreamerUDP.swift in Sources */,
+				7EC103A22B8F380C00BBD875 /* CameraViewController2.swift in Sources */,
 				7E86B28428EE262000B75675 /* AudioHelpers.swift in Sources */,
 				7E79816528E8DDE40064DA4F /* ARReceiver.swift in Sources */,
 				7E15DA7628ECCFDA009923C5 /* LidarCameraManager.swift in Sources */,

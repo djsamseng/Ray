@@ -12,7 +12,7 @@ import time
 GLOBAL_HEADER_SIZE = 375 # See StreamingSession.swift headerSize: Int = 375
 HEADER_SIZE = 100 # Set in StreamingSession.swift frameHeaderSize: Int = 100
 FOOTER_SIZE = 2 # Set in StreamingSession.swift frameFooterSize: Int = 2
-ADDR = "192.168.1.211"
+ADDR = "169.254.94.129"
 
 def play_audio(stream: pyaudio.Stream, np_data:np.ndarray):
   raw_bytes = np_data.tobytes()
@@ -76,7 +76,7 @@ def recvall(socket, buffer_size=4096, header_size=HEADER_SIZE, footer_size=FOOTE
 
 
 def livemode(skip: int, do_record: bool, armode: bool):
-  do_play_audio = True
+  do_play_audio = False
   if do_play_audio:
     queue = Queue()
     stop_signal = Value('i', 0)
@@ -85,14 +85,24 @@ def livemode(skip: int, do_record: bool, armode: bool):
   server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
   port = 10001
   if True:
-    # TCP
+    # TCP - ask to connect to existing host on addr
     addr = ADDR
+    print("CONNECTING TO:", addr)
     server_socket.connect((addr, port))
+    print("Did connect")
   else:
     # UDP
-    addr = ""
+    addr = "169.254.139.123"
     server_socket.bind((addr, port))
-  recv_global_header(socket=server_socket)
+
+  did_receive_header = False
+  while not did_receive_header:
+    try:
+      recv_global_header(socket=server_socket)
+      did_receive_header = True
+    except:
+      pass
+  print("Did get headers")
   itr = 0
   recording = False
   while True:

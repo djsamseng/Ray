@@ -16,17 +16,17 @@ class ServerStreamerUDP: NSObject, GCDAsyncUdpSocketDelegate {
     let socketQueue = DispatchQueue(label: "SocketQueue", attributes: .concurrent)
     
     let port: UInt16 = 10001
-    let ip: String = "192.168.1.242"//getIP()
+    let ip: String = getIP()
     override init() {
         super.init()
         self.serverSocket = GCDAsyncUdpSocket(delegate: self, delegateQueue: self.serverQueue, socketQueue: self.socketQueue)
         
         do {
-            //try self.serverSocket?.bind(toPort: self.port, interface: ip)
-            //try self.serverSocket?.beginReceiving()
+            try self.serverSocket?.bind(toPort: self.port, interface: ip)
+            try self.serverSocket?.beginReceiving()
         }
         catch {
-            print("===== Failed to listen on", ip, ":", port, "=====")
+            print("===== Failed to listen on", ip, ":", port, "=====", error)
         }
         print("===== IP:", self.ip, "Port:", self.port)
     }

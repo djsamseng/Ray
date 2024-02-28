@@ -12,8 +12,8 @@ import ARKit
 struct ContentView : View {
     var arDataProvider: ARDataProvider = ARDataProvider.instance
     var body: some View {
-        ARViewContainer().edgesIgnoringSafeArea(.all)
-        .onAppear(perform: {
+        Text("TEST")
+            .onAppear(perform: {
                 arDataProvider.start()
             })
     }
@@ -25,17 +25,20 @@ struct ARViewContainer: UIViewRepresentable {
         let arView = ARView(frame: .zero)
         arView.session = arDataProvider.arReceiver.arSession
 
-        // Add the box anchor to the scene
-        let coachingOverlay = ARCoachingOverlayView()
-        coachingOverlay.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        coachingOverlay.session = arView.session
-        coachingOverlay.goal = .horizontalPlane
-        arView.addSubview(coachingOverlay)
+        if (false) {
+            // Add the box anchor to the scene
+            let coachingOverlay = ARCoachingOverlayView()
+            coachingOverlay.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+            coachingOverlay.session = arView.session
+            coachingOverlay.goal = .horizontalPlane
+            arView.addSubview(coachingOverlay)
+            
+            let realityKitAnchor = try! Experience.loadBox()
+            realityKitAnchor.position = SIMD3(0, -0.1, -0.2)
+            
+            arView.scene.anchors.append(realityKitAnchor)
+        }
         
-        let realityKitAnchor = try! Experience.loadBox()
-        realityKitAnchor.position = SIMD3(0, -0.1, -0.2)
-        
-        arView.scene.anchors.append(realityKitAnchor)
         
         return arView
         

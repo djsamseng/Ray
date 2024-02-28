@@ -20,10 +20,11 @@ func getIP() -> String  {
             if addrFamily == UInt8(AF_INET) {
                 // wifi = ["en0"]
                 let name: String = String(cString: interface.ifa_name)
-                if name == "en0" {
+                if (name.starts(with: "en")) {
                     var hostname = [CChar](repeating: 0, count: Int(NI_MAXHOST))
                     getnameinfo(interface.ifa_addr, socklen_t(interface.ifa_addr.pointee.sa_len), &hostname, socklen_t(hostname.count), nil, socklen_t(0), NI_NUMERICHOST)
                     address = String(cString: hostname)
+                    print("Address:", address)
                 }
             }
         }
@@ -46,7 +47,7 @@ class ServerStreamer: NSObject, GCDAsyncSocketDelegate {
         self.port = port
         super.init()
         let ip = getIP()
-        print("IP:", ip)
+        print("IP:", ip, port)
         self.serverSocket = GCDAsyncSocket(delegate: self, delegateQueue: self.serverQueue, socketQueue: self.socketQueue)
         
         do {

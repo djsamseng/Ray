@@ -28,7 +28,7 @@ class ARReceiver: NSObject, ARSessionDelegate {
         }
         let config = ARWorldTrackingConfiguration()
         config.planeDetection = [.horizontal]
-        config.providesAudioData = true
+        //config.providesAudioData = true
         config.frameSemantics = [.sceneDepth, .smoothedSceneDepth]
         self.arSession.run(config)
     }

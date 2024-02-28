@@ -3,6 +3,8 @@
 
 Streams ARKit Data to Python over your local network
 
+TODO: Replace with https://github.com/shogo4405/HaishinKit.swift#-prerequisites
+
 ## Install
 1. `pip3 install numpy opencv-python`
 
