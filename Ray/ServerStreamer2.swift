@@ -8,35 +8,10 @@
 import Foundation
 import CocoaAsyncSocket
 
-func getIP() -> String  {
-    var ifaddr: UnsafeMutablePointer<ifaddrs>? = nil
-    var address = ""
-    if getifaddrs(&ifaddr) == 0 {
-        var ptr = ifaddr
-        while ptr != nil {
-            defer { ptr = ptr?.pointee.ifa_next }
-            guard let interface = ptr?.pointee else { return "" }
-            let addrFamily = interface.ifa_addr.pointee.sa_family
-            if addrFamily == UInt8(AF_INET) {
-                // wifi = ["en0"]
-                let name: String = String(cString: interface.ifa_name)
-                if (name.starts(with: "en")) {
-                    var hostname = [CChar](repeating: 0, count: Int(NI_MAXHOST))
-                    getnameinfo(interface.ifa_addr, socklen_t(interface.ifa_addr.pointee.sa_len), &hostname, socklen_t(hostname.count), nil, socklen_t(0), NI_NUMERICHOST)
-                    address = String(cString: hostname)
-                    print("Address:", address)
-                }
-            }
-        }
-        freeifaddrs(ifaddr)
-    }
-    return address
-}
 
-
-class ServerStreamer: NSObject, GCDAsyncSocketDelegate {
+class ServerStreamer2: NSObject, GCDAsyncSocketDelegate {
     fileprivate var serverSocket: GCDAsyncSocket?
-    fileprivate var clients = [Int: StreamingSession]()
+    fileprivate var clients = [Int: StreamingSession2]()
     
     let serverQueue = DispatchQueue(label: "ServerQueue", attributes: [])
     let clientQueue = DispatchQueue(label: "ClientQueue", attributes: .concurrent)
@@ -72,7 +47,7 @@ class ServerStreamer: NSObject, GCDAsyncSocketDelegate {
     func socket(_ sock: GCDAsyncSocket, didAcceptNewSocket newSocket: GCDAsyncSocket) {
         print("New client connected from:", newSocket.connectedHost ?? "unknown")
         guard let clientId = newSocket.connectedAddress?.hashValue else { return }
-        let newClient = StreamingSession(id: clientId, client: newSocket, queue: self.clientQueue)
+        let newClient = StreamingSession2(id: clientId, client: newSocket, queue: self.clientQueue)
         self.clients[clientId] = newClient
         newClient.startStreaming()
     }

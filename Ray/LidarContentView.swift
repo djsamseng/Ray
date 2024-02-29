@@ -14,8 +14,9 @@ struct LidarDepthView: View {
 }
 
 struct LidarColorView: View {
+    var lidarCameraController: LidarCameraController
     var body: some View {
-        EmptyView()
+        CameraViewControllerRepresentable(lidarCameraController: lidarCameraController)
     }
 }
 
@@ -24,7 +25,7 @@ struct LidarContentView: View {
     var body: some View {
         VStack {
             ZStack {
-                LidarColorView()
+                LidarColorView(lidarCameraController: lidarCameraController)
                 LidarDepthView()
             }
         }

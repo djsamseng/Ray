@@ -57,7 +57,10 @@ class LidarCameraCaptureData: Encodable {
     }
 }
 
-class LidarCameraController: NSObject, ObservableObject, AVCaptureDataOutputSynchronizerDelegate, AVCaptureAudioDataOutputSampleBufferDelegate {
+class LidarCameraController: NSObject, ObservableObject, AVCaptureDataOutputSynchronizerDelegate, AVCaptureAudioDataOutputSampleBufferDelegate, AVCaptureDepthDataOutputDelegate, AVCaptureVideoDataOutputSampleBufferDelegate {
+    private let captureAudio = false;
+    private let captureMotion = false;
+    
     private let preferredWidthResolution = 1920
     private let videoQueue = DispatchQueue(label: "VideoQueue", qos: .userInteractive)
     private let audioQueue = DispatchQueue(label: "AudioQueuue", qos: .userInteractive)
@@ -67,8 +70,11 @@ class LidarCameraController: NSObject, ObservableObject, AVCaptureDataOutputSync
     private var depthOutput: AVCaptureDepthDataOutput!
     private var videoSync: AVCaptureDataOutputSynchronizer!
     
-    private let serverStreamer = ServerStreamer()
-    //private let audioServerStreamer = ServerStreamer(port: 10002)
+    private let ciContext = CIContext(options: nil)
+    
+    private let videoStreamer = ServerStreamer2(port: 10001)
+    private let depthStreamer = ServerStreamer2(port: 10002)
+    private let audioServerStreamer: ServerStreamer? = nil; // ServerStreamer(port: 10002)
 
     private var didPrintAudioFormat = false
     
@@ -98,6 +104,9 @@ class LidarCameraController: NSObject, ObservableObject, AVCaptureDataOutputSync
     }
     
     private func setupDeviceMotion() {
+        if !self.captureMotion {
+            return
+        }
         self.motionManager.deviceMotionUpdateInterval = 1.0 / 100.0
         self.motionManager.showsDeviceMovementDisplay = true
         self.motionManager.startDeviceMotionUpdates(using: .xMagneticNorthZVertical)
@@ -115,7 +124,9 @@ class LidarCameraController: NSObject, ObservableObject, AVCaptureDataOutputSync
     }
     
     private func setupAudioCaptureInput() throws {
-        return
+        if !captureAudio {
+            return;
+        }
         guard let audioDevice = AVCaptureDevice.default(for: .audio) else {
             print("audioDeviceUnavailable")
             throw ConfigurationError.audioDeviceUnavailable
@@ -130,6 +141,7 @@ class LidarCameraController: NSObject, ObservableObject, AVCaptureDataOutputSync
             throw ConfigurationError.lidarDeviceUnavailable
         }
         guard let format = (lidarDevice.formats.last { format in
+            print("Availble format:", format.formatDescription.dimensions.width)
             return format.formatDescription.dimensions.width == self.preferredWidthResolution &&
             format.formatDescription.mediaSubType.rawValue == kCVPixelFormatType_420YpCbCr8BiPlanarFullRange &&
             !format.isVideoBinned &&
@@ -155,9 +167,12 @@ class LidarCameraController: NSObject, ObservableObject, AVCaptureDataOutputSync
     }
     
     private func setupCaptureOutputs() {
-        self.audioOutput = AVCaptureAudioDataOutput()
-        self.session.addOutput(self.audioOutput)
-        self.audioOutput.setSampleBufferDelegate(self, queue: self.audioQueue)
+        if captureAudio {
+            self.audioOutput = AVCaptureAudioDataOutput()
+            self.session.addOutput(self.audioOutput)
+            self.audioOutput.setSampleBufferDelegate(self, queue: self.audioQueue)
+        }
+        
         
         self.videoOutput = AVCaptureVideoDataOutput()
         self.session.addOutput(self.videoOutput)
@@ -166,16 +181,27 @@ class LidarCameraController: NSObject, ObservableObject, AVCaptureDataOutputSync
         self.depthOutput.isFilteringEnabled = self.isFilteringEnabled
         self.session.addOutput(self.depthOutput)
         
-        self.videoSync = AVCaptureDataOutputSynchronizer(dataOutputs: [self.depthOutput, self.videoOutput])
-        self.videoSync.setDelegate(self, queue: self.videoQueue)
+        if true {
+            self.depthOutput.setDelegate(self, callbackQueue: self.videoQueue)
+            self.videoOutput.setSampleBufferDelegate(self, queue: self.videoQueue)
+        }
+        else {
+            self.videoSync = AVCaptureDataOutputSynchronizer(dataOutputs: [self.depthOutput, self.videoOutput])
+            self.videoSync.setDelegate(self, queue: self.videoQueue)
+        }
+        
+        
         
         guard let outputConnection = self.videoOutput.connection(with: .video) else {
             print("Failed to create videoOutput connection")
             return
         }
-        if outputConnection.isCameraIntrinsicMatrixDeliverySupported {
-            outputConnection.isCameraIntrinsicMatrixDeliveryEnabled = true
+        if self.captureMotion {
+            if outputConnection.isCameraIntrinsicMatrixDeliverySupported {
+                outputConnection.isCameraIntrinsicMatrixDeliveryEnabled = true
+            }
         }
+        
     }
     
     func startStream() {
@@ -186,18 +212,64 @@ class LidarCameraController: NSObject, ObservableObject, AVCaptureDataOutputSync
         self.session.stopRunning()
     }
     
-    
-    
     func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
-        if output == self.audioOutput {
+        if captureAudio && output == self.audioOutput {
             self.printAudioFormatOnce(sampleBuffer: sampleBuffer)
             let audioData = AudioHelpers.getAudioData(sampleBuffer: sampleBuffer)
             
             let audioCaptureData = AudioCaptureData(audioData: audioData)
             let encoder = JSONEncoder()
             let data = try! encoder.encode(audioCaptureData)
-            //self.audioServerStreamer.streamData(data: data)
+            self.audioServerStreamer?.streamData(data: data)
         }
+        if output == self.videoOutput {
+            self.streamVideo(videoData: sampleBuffer)
+        }
+    }
+    
+    private func ciImageToJpegImage(im: CIImage) -> Data? {
+        return nil
+        guard let cgImage = self.ciContext.createCGImage(im, from: im.extent) else { return nil }
+        
+        let uiImage = UIImage(cgImage: cgImage)
+        let imageToSend = uiImage.jpegData(compressionQuality: 0)
+        return imageToSend
+    }
+    
+    func resizeImage(im: UIImage) -> UIImage? {
+        let scale = 0.2
+        let newWidth = im.size.width * scale
+        let newHeight = im.size.height * scale
+        UIGraphicsBeginImageContext(CGSize(width: newWidth, height: newHeight))
+        im.draw(in: CGRect(x: 0, y: 0, width: newWidth, height: newHeight))
+        let newImage = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        return newImage
+    }
+    
+    private func streamDepth(depthData: AVDepthData) {
+        if depthData.depthDataType != kCVPixelFormatType_DepthFloat16 {
+            print("Unhandled depth type:", depthData.depthDataType)
+        }
+        
+        guard let depthImage = CIImage(depthData: depthData) else { return }
+        let uiImage = UIImage(ciImage: depthImage)
+        guard let depthImageToSend = uiImage.jpegData(compressionQuality: 0) else { return }
+        self.depthStreamer.streamData(data: depthImageToSend)
+    }
+    
+    
+    
+    private func streamVideo(videoData: CMSampleBuffer) {
+        
+        guard let capture = CMSampleBufferGetImageBuffer(videoData) else { return }
+        
+        let ciImage = CIImage(cvImageBuffer: capture, options: nil)
+        let uiImage = UIImage(ciImage: ciImage)
+        guard let resizedImage = resizeImage(im: uiImage) else { return }
+        guard let videoImageToSend = resizedImage.jpegData(compressionQuality: 0.8) else { return }
+        self.videoStreamer.streamData(data: videoImageToSend)
+        
     }
     
     func dataOutputSynchronizer(_ synchronizer: AVCaptureDataOutputSynchronizer, didOutput synchronizedDataCollection: AVCaptureSynchronizedDataCollection) {
@@ -212,24 +284,20 @@ class LidarCameraController: NSObject, ObservableObject, AVCaptureDataOutputSync
             return
         }
         //print("Success pixelBuffer")
-        var userAcceleration: [Double]? = nil
-        var userDirection: [Double]? = nil
-        if let motionData = self.motionManager.deviceMotion {
-            userAcceleration = [motionData.userAcceleration.x, motionData.userAcceleration.y, motionData.userAcceleration.z]
-            userDirection = [motionData.attitude.roll, motionData.attitude.pitch, motionData.attitude.yaw]
+        if self.captureMotion {
+            var userAcceleration: [Double]? = nil
+            var userDirection: [Double]? = nil
+            if let motionData = self.motionManager.deviceMotion {
+                userAcceleration = [motionData.userAcceleration.x, motionData.userAcceleration.y, motionData.userAcceleration.z]
+                userDirection = [motionData.attitude.roll, motionData.attitude.pitch, motionData.attitude.yaw]
+            }
         }
-        if syncedDepthData.depthData.depthDataType != kCVPixelFormatType_DepthFloat16 {
-            print("Unhandled depth type:", syncedDepthData.depthData.depthDataType)
-        }
-        
-        let depthFloatData = ImageHelpers.convertDepthDataToArray(depthData: syncedDepthData.depthData)
-        
-        
-        let captureData = LidarCameraCaptureData(depth: depthFloatData, color: pixelBuffer, userAcceleration: userAcceleration, userDirection: userDirection, cameraIntrinsics: cameraCalibrationData.intrinsicMatrix, cameraReferenceDimesnions: cameraCalibrationData.intrinsicMatrixReferenceDimensions, pixelSize: cameraCalibrationData.pixelSize)
-        
-        let encoder = JSONEncoder()
-        let data = try! encoder.encode(captureData)
-        self.serverStreamer.streamData(data: data)
+        self.streamVideo(videoData: syncedVideoData.sampleBuffer)
+        self.streamDepth(depthData: syncedDepthData.depthData)
+    }
+    
+    func depthDataOutput(_ output: AVCaptureDepthDataOutput, didOutput depthData: AVDepthData, timestamp: CMTime, connection: AVCaptureConnection) {
+        self.streamDepth(depthData: depthData)
     }
     
     func printAudioFormatOnce(sampleBuffer: CMSampleBuffer) {
