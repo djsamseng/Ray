@@ -8,25 +8,50 @@
 import SwiftUI
 
 struct LidarDepthView: View {
+    @StateObject var lidarCameraController: LidarCameraController
+    
+    var ips = getIP()
     var body: some View {
-        EmptyView()
+        HStack(alignment:.top) {
+            VStack(alignment:.leading) {
+                Text(lidarCameraController.ip)
+                    .foregroundColor(.blue)
+                ForEach(lidarCameraController.ips ?? [], id: \.self) { ip in
+                    if ip == lidarCameraController.ip {
+                        EmptyView()
+                    }
+                    else {
+                        Button(action: {
+                            lidarCameraController.changeIp(ip: ip)
+                        }, label: {
+                            Text(ip)
+                        })
+                    }
+                }
+                Spacer()
+            }
+            Spacer()
+        }
+            .foregroundColor(.white)
+            .padding()
+        
     }
 }
 
 struct LidarColorView: View {
-    var lidarCameraController: LidarCameraController
+    var lidarCameraController: LidarCameraController?
     var body: some View {
         CameraViewControllerRepresentable(lidarCameraController: lidarCameraController)
     }
 }
 
 struct LidarContentView: View {
-    private var lidarCameraController = LidarCameraController()
+    @StateObject var lidarCameraController: LidarCameraController
     var body: some View {
         VStack {
             ZStack {
                 LidarColorView(lidarCameraController: lidarCameraController)
-                LidarDepthView()
+                LidarDepthView(lidarCameraController: lidarCameraController)
             }
         }
         .onAppear(perform: {
@@ -39,6 +64,8 @@ struct LidarContentView: View {
 
 struct LidarContentView_Previews: PreviewProvider {
     static var previews: some View {
-        LidarContentView()
+        EmptyView()
+        //LidarContentView()
+        //    .previewInterfaceOrientation(.landscapeLeft)
     }
 }

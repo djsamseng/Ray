@@ -12,53 +12,8 @@ import AVFoundation
 import CoreImage
 import CoreMotion
 
-func cvPixelBufferToCvImageBuffer(cvPixelBuffer: CVPixelBuffer) -> CVImageBuffer? {
-    guard let sampleBuffer = sampleBufferFromPixelBuffer(pixelBuffer: cvPixelBuffer, seconds: 0) else { return nil }
-    guard let capture: CVImageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return nil }
-    return capture
-}
 
-extension matrix_float3x3: Codable {
-    public init(from decoder: Decoder) throws {
-        var container = try decoder.unkeyedContainer()
-        try self.init(container.decode([SIMD3<Float>].self))
-    }
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.unkeyedContainer()
-        try container.encode([columns.0,columns.1, columns.2])
-    }
-}
-
-
-
-class LidarCameraCaptureData: Encodable {
-    var depthImage: Data
-    var colorImage: Data?
-    var userAcceleration: [Double]?
-    var userDirection: [Double]?
-    var cameraIntrinsics: matrix_float3x3
-    var cameraReferenceDimesnions: CGSize
-    var pixelSize: Float
-    
-    init(depth: Data,
-         color: CVImageBuffer,
-         userAcceleration: [Double]?,
-         userDirection: [Double]?,
-         cameraIntrinsics: matrix_float3x3,
-         cameraReferenceDimesnions: CGSize,
-         pixelSize: Float) {
-        self.depthImage = depth
-        self.colorImage = ImageHelpers.cvImageBufferToData(cvImageBuffer: color)
-        self.userAcceleration = userAcceleration
-        self.userDirection = userDirection
-        self.cameraIntrinsics = cameraIntrinsics
-        self.cameraReferenceDimesnions = cameraReferenceDimesnions
-        self.pixelSize = pixelSize
-    }
-}
-
-class LidarCameraController: NSObject, ObservableObject, AVCaptureDataOutputSynchronizerDelegate, AVCaptureAudioDataOutputSampleBufferDelegate, AVCaptureDepthDataOutputDelegate, AVCaptureVideoDataOutputSampleBufferDelegate {
-    private let captureAudio = false;
+class LidarCameraController: NSObject, ObservableObject, AVCaptureDataOutputSynchronizerDelegate {
     private let captureMotion = false;
     
     private let preferredWidthResolution = 1920
@@ -72,13 +27,18 @@ class LidarCameraController: NSObject, ObservableObject, AVCaptureDataOutputSync
     
     private let ciContext = CIContext(options: nil)
     
-    private let videoStreamer = ServerStreamer2(port: 10001)
-    private let depthStreamer = ServerStreamer2(port: 10002)
-    private let audioServerStreamer: ServerStreamer? = nil; // ServerStreamer(port: 10002)
+    private var videoStreamer: ServerStreamer2
+    private var depthStreamer: ServerStreamer2
 
     private var didPrintAudioFormat = false
     
     private var motionManager = CMMotionManager()
+    
+    fileprivate var previousOrientation = UIDeviceOrientation.unknown
+    
+    var ips: [String]
+    @Published private(set) var ip: String
+    @Published private(set) var selectedIpIdx: Int
     
     var isFilteringEnabled = true {
         didSet {
@@ -92,6 +52,15 @@ class LidarCameraController: NSObject, ObservableObject, AVCaptureDataOutputSync
     }
     override init() {
         //CVMetalTextureCacheCreate(kCFAllocatorDefault, nil, MetalEnvironment.shared.metalDevice, nil, &textureCache)
+        let ips = getIP()
+        let selectedIpIdx = 0
+        let ip = ips[selectedIpIdx]
+        self.ip = ip
+        self.ips = ips
+        self.selectedIpIdx = selectedIpIdx
+        self.videoStreamer = ServerStreamer2(ip: ip, port: 10001)
+        self.depthStreamer = ServerStreamer2(ip: ip, port: 10002)
+        
         super.init()
         print("Created LidarCameraController")
         self.setupDeviceMotion()
@@ -100,6 +69,19 @@ class LidarCameraController: NSObject, ObservableObject, AVCaptureDataOutputSync
         }
         catch {
             fatalError("Failed to setup lidar camera capture session")
+        }
+    }
+    
+    func changeIp(ip: String) {
+        if ip != self.ip {
+            self.stopStream()
+            self.videoStreamer.stopStreaming()
+            self.depthStreamer.stopStreaming()
+            self.ip = ip
+            self.selectedIpIdx = self.ips.firstIndex(of: ip) ?? 0
+            self.videoStreamer = ServerStreamer2(ip: ip, port: 10001)
+            self.depthStreamer = ServerStreamer2(ip: ip, port: 10002)
+            self.startStream()
         }
     }
     
@@ -117,22 +99,9 @@ class LidarCameraController: NSObject, ObservableObject, AVCaptureDataOutputSync
         self.session.sessionPreset = .inputPriority
         self.session.beginConfiguration()
         
-        try self.setupAudioCaptureInput()
         try self.setupCaptureInput()
         self.setupCaptureOutputs()
         self.session.commitConfiguration()
-    }
-    
-    private func setupAudioCaptureInput() throws {
-        if !captureAudio {
-            return;
-        }
-        guard let audioDevice = AVCaptureDevice.default(for: .audio) else {
-            print("audioDeviceUnavailable")
-            throw ConfigurationError.audioDeviceUnavailable
-        }
-        let deviceInput = try AVCaptureDeviceInput(device: audioDevice)
-        self.session.addInput(deviceInput)
     }
     
     private func setupCaptureInput() throws {
@@ -167,13 +136,6 @@ class LidarCameraController: NSObject, ObservableObject, AVCaptureDataOutputSync
     }
     
     private func setupCaptureOutputs() {
-        if captureAudio {
-            self.audioOutput = AVCaptureAudioDataOutput()
-            self.session.addOutput(self.audioOutput)
-            self.audioOutput.setSampleBufferDelegate(self, queue: self.audioQueue)
-        }
-        
-        
         self.videoOutput = AVCaptureVideoDataOutput()
         self.session.addOutput(self.videoOutput)
         
@@ -181,14 +143,8 @@ class LidarCameraController: NSObject, ObservableObject, AVCaptureDataOutputSync
         self.depthOutput.isFilteringEnabled = self.isFilteringEnabled
         self.session.addOutput(self.depthOutput)
         
-        if true {
-            self.depthOutput.setDelegate(self, callbackQueue: self.videoQueue)
-            self.videoOutput.setSampleBufferDelegate(self, queue: self.videoQueue)
-        }
-        else {
-            self.videoSync = AVCaptureDataOutputSynchronizer(dataOutputs: [self.depthOutput, self.videoOutput])
-            self.videoSync.setDelegate(self, queue: self.videoQueue)
-        }
+        self.videoSync = AVCaptureDataOutputSynchronizer(dataOutputs: [self.depthOutput, self.videoOutput])
+        self.videoSync.setDelegate(self, queue: self.videoQueue)
         
         
         
@@ -201,7 +157,6 @@ class LidarCameraController: NSObject, ObservableObject, AVCaptureDataOutputSync
                 outputConnection.isCameraIntrinsicMatrixDeliveryEnabled = true
             }
         }
-        
     }
     
     func startStream() {
@@ -210,30 +165,6 @@ class LidarCameraController: NSObject, ObservableObject, AVCaptureDataOutputSync
     
     func stopStream() {
         self.session.stopRunning()
-    }
-    
-    func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
-        if captureAudio && output == self.audioOutput {
-            self.printAudioFormatOnce(sampleBuffer: sampleBuffer)
-            let audioData = AudioHelpers.getAudioData(sampleBuffer: sampleBuffer)
-            
-            let audioCaptureData = AudioCaptureData(audioData: audioData)
-            let encoder = JSONEncoder()
-            let data = try! encoder.encode(audioCaptureData)
-            self.audioServerStreamer?.streamData(data: data)
-        }
-        if output == self.videoOutput {
-            self.streamVideo(videoData: sampleBuffer)
-        }
-    }
-    
-    private func ciImageToJpegImage(im: CIImage) -> Data? {
-        return nil
-        guard let cgImage = self.ciContext.createCGImage(im, from: im.extent) else { return nil }
-        
-        let uiImage = UIImage(cgImage: cgImage)
-        let imageToSend = uiImage.jpegData(compressionQuality: 0)
-        return imageToSend
     }
     
     func resizeImage(im: UIImage) -> UIImage? {
@@ -258,8 +189,6 @@ class LidarCameraController: NSObject, ObservableObject, AVCaptureDataOutputSync
         self.depthStreamer.streamData(data: depthImageToSend)
     }
     
-    
-    
     private func streamVideo(videoData: CMSampleBuffer) {
         
         guard let capture = CMSampleBufferGetImageBuffer(videoData) else { return }
@@ -283,6 +212,7 @@ class LidarCameraController: NSObject, ObservableObject, AVCaptureDataOutputSync
             //print("Failed to get pixelBuffer and cameraCalibrationData")
             return
         }
+        self.updateOrientation()
         //print("Success pixelBuffer")
         if self.captureMotion {
             var userAcceleration: [Double]? = nil
@@ -296,15 +226,28 @@ class LidarCameraController: NSObject, ObservableObject, AVCaptureDataOutputSync
         self.streamDepth(depthData: syncedDepthData.depthData)
     }
     
-    func depthDataOutput(_ output: AVCaptureDepthDataOutput, didOutput depthData: AVDepthData, timestamp: CMTime, connection: AVCaptureConnection) {
-        self.streamDepth(depthData: depthData)
-    }
-    
-    func printAudioFormatOnce(sampleBuffer: CMSampleBuffer) {
-        if didPrintAudioFormat {
-            return
+    fileprivate func updateOrientation() {
+        let currentOrientation = UIDevice.current.orientation
+        if currentOrientation != self.previousOrientation {
+            switch currentOrientation {
+            case .portrait:
+                self.videoOutput.connection(with: .video)?.videoRotationAngle = 90
+                self.depthOutput.connection(with: .depthData)?.videoRotationAngle = 90
+            case .landscapeRight:
+                self.videoOutput.connection(with: .video)?.videoRotationAngle = 180
+                self.depthOutput.connection(with: .depthData)?.videoRotationAngle = 180
+            case .landscapeLeft:
+                self.videoOutput.connection(with: .video)?.videoRotationAngle = 0
+                self.depthOutput.connection(with: .depthData)?.videoRotationAngle = 0
+            case .portraitUpsideDown:
+                self.videoOutput.connection(with: .video)?.videoRotationAngle = 270
+                self.depthOutput.connection(with: .depthData)?.videoRotationAngle = 270
+            default:
+                self.videoOutput.connection(with: .video)?.videoRotationAngle = 90
+                self.depthOutput.connection(with: .depthData)?.videoRotationAngle = 90
+            }
+
+            self.previousOrientation = currentOrientation
         }
-        didPrintAudioFormat = true
-        AudioHelpers.printAudioFormat(sampleBuffer: sampleBuffer)
     }
 }

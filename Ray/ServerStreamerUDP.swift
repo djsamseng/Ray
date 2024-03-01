@@ -16,7 +16,7 @@ class ServerStreamerUDP: NSObject, GCDAsyncUdpSocketDelegate {
     let socketQueue = DispatchQueue(label: "SocketQueue", attributes: .concurrent)
     
     let port: UInt16 = 10001
-    let ip: String = getIP()
+    let ip: String = getIP()[0]
     override init() {
         super.init()
         self.serverSocket = GCDAsyncUdpSocket(delegate: self, delegateQueue: self.serverQueue, socketQueue: self.socketQueue)

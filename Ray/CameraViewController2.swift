@@ -45,10 +45,13 @@ final class CameraViewController2: UIViewController {
         print("Création du serveur sur l'IP \(String(describing: self.ip))")
         self.serverSocket = GCDAsyncSocket(delegate: self, delegateQueue: self.serverQueue, socketQueue: self.socketWriteQueue)
 
-        do {
-            try self.serverSocket?.accept(onInterface: self.ip, port: 10001)
-        } catch {
-            print("Could not start listening on port 10001 (\(error))")
+        for ip in self.ip {
+            do {
+                try self.serverSocket?.accept(onInterface: ip, port: 10001)
+            }
+            catch {
+                print("===== Failed to listen on", ip, ":", 10001, "=====")
+            }
         }
 
         // Do any additional setup after loading the view.
