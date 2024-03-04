@@ -62,10 +62,10 @@ final class CameraViewController: UIViewController {
         let statusBarOrientation = UIApplication.shared.windows.first?.windowScene?.interfaceOrientation ?? .landscapeLeft
         var newAngle: CGFloat = 90.0
         if statusBarOrientation == .landscapeLeft {
-            newAngle = 180
+            newAngle = 0
         }
         else if statusBarOrientation == .landscapeRight {
-            newAngle = 0
+            newAngle = 180
         }
         else if statusBarOrientation == .portraitUpsideDown {
             newAngle = 270

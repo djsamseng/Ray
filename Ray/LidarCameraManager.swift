@@ -105,7 +105,7 @@ class LidarCameraController: NSObject, ObservableObject, AVCaptureDataOutputSync
     }
     
     private func setupCaptureInput() throws {
-        guard let lidarDevice = AVCaptureDevice.default(.builtInLiDARDepthCamera, for:. video, position: .back) else {
+        guard let lidarDevice = AVCaptureDevice.default(.builtInTrueDepthCamera, for:. video, position: .front) else {
             print("No lidar device")
             throw ConfigurationError.lidarDeviceUnavailable
         }
@@ -234,11 +234,11 @@ class LidarCameraController: NSObject, ObservableObject, AVCaptureDataOutputSync
                 self.videoOutput.connection(with: .video)?.videoRotationAngle = 90
                 self.depthOutput.connection(with: .depthData)?.videoRotationAngle = 90
             case .landscapeRight:
-                self.videoOutput.connection(with: .video)?.videoRotationAngle = 180
-                self.depthOutput.connection(with: .depthData)?.videoRotationAngle = 180
-            case .landscapeLeft:
                 self.videoOutput.connection(with: .video)?.videoRotationAngle = 0
                 self.depthOutput.connection(with: .depthData)?.videoRotationAngle = 0
+            case .landscapeLeft:
+                self.videoOutput.connection(with: .video)?.videoRotationAngle = 180
+                self.depthOutput.connection(with: .depthData)?.videoRotationAngle = 180
             case .portraitUpsideDown:
                 self.videoOutput.connection(with: .video)?.videoRotationAngle = 270
                 self.depthOutput.connection(with: .depthData)?.videoRotationAngle = 270
