@@ -221,11 +221,14 @@ class LidarCameraController: NSObject, ObservableObject, AVCaptureDataOutputSync
         if syncedDepthData.depthData.depthDataType != kCVPixelFormatType_DepthFloat16 {
             print("Unhandled depth type:", syncedDepthData.depthData.depthDataType)
         }
-        
+        guard let resized = resizeVideoBuffer(videoData: syncedVideoData.sampleBuffer) else {
+            print("Could not resize")
+            return
+        }
         let depthFloatData = ImageHelpers.convertDepthDataToArray(depthData: syncedDepthData.depthData)
         
         
-        let captureData = LidarCameraCaptureData(depth: depthFloatData, color: pixelBuffer, userAcceleration: userAcceleration, userDirection: userDirection, cameraIntrinsics: cameraCalibrationData.intrinsicMatrix, cameraReferenceDimesnions: cameraCalibrationData.intrinsicMatrixReferenceDimensions, pixelSize: cameraCalibrationData.pixelSize)
+        let captureData = LidarCameraCaptureData(depth: depthFloatData, color: resized, userAcceleration: userAcceleration, userDirection: userDirection, cameraIntrinsics: cameraCalibrationData.intrinsicMatrix, cameraReferenceDimesnions: cameraCalibrationData.intrinsicMatrixReferenceDimensions, pixelSize: cameraCalibrationData.pixelSize)
         
         let encoder = JSONEncoder()
         let data = try! encoder.encode(captureData)
@@ -238,5 +241,54 @@ class LidarCameraController: NSObject, ObservableObject, AVCaptureDataOutputSync
         }
         didPrintAudioFormat = true
         AudioHelpers.printAudioFormat(sampleBuffer: sampleBuffer)
+    }
+    
+    func pixelBufferFromCGImage(image: CGImage) -> CVPixelBuffer? {
+        var pxbuffer: CVPixelBuffer? = nil
+        let options: NSDictionary = [:]
+
+        let width =  image.width
+        let height = image.height
+        let bytesPerRow = image.bytesPerRow
+        
+        let dataFromImageDataProvider = CFDataCreateMutableCopy(kCFAllocatorDefault, 0, image.dataProvider!.data)
+        guard let x = CFDataGetMutableBytePtr(dataFromImageDataProvider) else { return nil}
+
+        kCVPixelFormatType_420YpCbCr8BiPlanarFullRange
+        CVPixelBufferCreateWithBytes(
+            kCFAllocatorDefault,
+            width,
+            height,
+            
+            kCVPixelFormatType_32BGRA,
+            x,
+            bytesPerRow,
+            nil,
+            nil,
+            options,
+            &pxbuffer
+        )
+        return pxbuffer;
+    }
+    
+    func resizeVideoBuffer(videoData: CMSampleBuffer) -> CVPixelBuffer? {
+        guard let capture = CMSampleBufferGetImageBuffer(videoData) else { return nil }
+        
+        let ciImage = CIImage(cvImageBuffer: capture, options: nil)
+        let uiImage = UIImage(ciImage: ciImage)
+        guard let resizedImage = resizeImage(im: uiImage) else { return nil }
+        guard let cgImage = resizedImage.cgImage else { return nil }
+        return pixelBufferFromCGImage(image: cgImage)
+    }
+    
+    func resizeImage(im: UIImage) -> UIImage? {
+        let scale = 0.2
+        let newWidth = im.size.width * scale
+        let newHeight = im.size.height * scale
+        UIGraphicsBeginImageContext(CGSize(width: newWidth, height: newHeight))
+        im.draw(in: CGRect(x: 0, y: 0, width: newWidth, height: newHeight))
+        let newImage = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        return newImage
     }
 }

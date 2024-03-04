@@ -12,7 +12,7 @@ import time
 GLOBAL_HEADER_SIZE = 375 # See StreamingSession.swift headerSize: Int = 375
 HEADER_SIZE = 100 # Set in StreamingSession.swift frameHeaderSize: Int = 100
 FOOTER_SIZE = 2 # Set in StreamingSession.swift frameFooterSize: Int = 2
-ADDR = "169.254.94.129"
+ADDR = "169.254.94.129" # 192.168.87.97
 
 def play_audio(stream: pyaudio.Stream, np_data:np.ndarray):
   raw_bytes = np_data.tobytes()
@@ -135,7 +135,7 @@ def livemode(skip: int, do_record: bool, armode: bool):
       else:
         # 320, 240
         np_depth = np.frombuffer(base64.b64decode(depth_image), dtype=np.float32).reshape((-1, 320))#.astype(np.float32)
-        scaled_depth = np_depth / (np.max(np_depth) - np.min(np_depth))
+        scaled_depth = (np_depth - np.min(np_depth)) / (np.max(np_depth) - np.min(np_depth))
         cv2.imshow("Depth", np_depth)
         cv2.imshow("Scaled Depth", scaled_depth)
 
