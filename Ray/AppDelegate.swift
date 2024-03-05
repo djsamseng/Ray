@@ -14,10 +14,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
 
+    func getContentView() -> LidarContentView {
+        let lidarCameraController = LidarCameraController()
+        return LidarContentView(lidarCameraController: lidarCameraController)
+    }
+
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
 
         // Create the SwiftUI view that provides the window contents.
-        let contentView = LidarContentView()
+        
+        let contentView = getContentView()
 
         // Use a UIHostingController as window root view controller.
         let window = UIWindow(frame: UIScreen.main.bounds)

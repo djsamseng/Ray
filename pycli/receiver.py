@@ -112,7 +112,7 @@ def livemode(skip: int, do_record: bool, armode: bool):
       break
     try:
       data = json.loads(message)
-      color_image = data["colorImage"]
+
       depth_image = data["depthImage"]
       if "userAcceleration" in data:
         userAcceleration = np.array(data["userAcceleration"], dtype=np.float32)
@@ -123,9 +123,11 @@ def livemode(skip: int, do_record: bool, armode: bool):
         camera_position = camera_translation[0, 3, :]
         # [right/left, up/down, back/forward]
         # See https://stackoverflow.com/questions/45437037/arkit-what-do-the-different-columns-in-transform-matrix-represent
-      np_color = np.frombuffer(base64.b64decode(color_image), dtype=np.uint8)
-      im = cv2.imdecode(np_color, cv2.IMREAD_COLOR)
-      cv2.imshow("Color", im)
+      if "colorImage" in data:
+        color_image = data["colorImage"]
+        np_color = np.frombuffer(base64.b64decode(color_image), dtype=np.uint8)
+        im = cv2.imdecode(np_color, cv2.IMREAD_COLOR)
+        cv2.imshow("Color", im)
       if armode:
         # 256, 192
         np_depth = np.frombuffer(base64.b64decode(depth_image), dtype=np.float32).reshape((-1, 256)).astype(np.float32)
@@ -155,7 +157,7 @@ def livemode(skip: int, do_record: bool, armode: bool):
           break
     except Exception as e:
       print("Failed to load json:", e)
-      print(message)
+      #print(message)
 
   if do_play_audio:
     stop_signal.value = 1

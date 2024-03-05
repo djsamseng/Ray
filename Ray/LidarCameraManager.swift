@@ -12,10 +12,72 @@ import AVFoundation
 import CoreImage
 import CoreMotion
 
-func cvPixelBufferToCvImageBuffer(cvPixelBuffer: CVPixelBuffer) -> CVImageBuffer? {
-    guard let sampleBuffer = sampleBufferFromPixelBuffer(pixelBuffer: cvPixelBuffer, seconds: 0) else { return nil }
-    guard let capture: CVImageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return nil }
-    return capture
+func handleCMSampleBufferError(status: OSStatus) {
+    switch status {
+    case kCMSampleBufferError_AllocationFailed:
+        print("AllocationFailed")
+    case kCMSampleBufferError_AlreadyHasDataBuffer:
+        print("AlreadyHasDataBuffer")
+    case kCMSampleBufferError_ArrayTooSmall:
+        print("ArrayTooSmall")
+    case kCMSampleBufferError_BufferHasNoSampleSizes:
+        print("BufferHasNoSampleSizes")
+    case kCMSampleBufferError_BufferNotReady:
+        print("BufferNotReady")
+    case kCMSampleBufferError_CannotSubdivide:
+        print("CannotSubdivide")
+    case kCMSampleBufferError_DataFailed:
+        print("DataFailed")
+    case kCMSampleBufferError_DataCanceled:
+        print("DataCanceled")
+    case kCMSampleBufferError_Invalidated:
+        print("Invalidated")
+    case kCMSampleBufferError_InvalidEntryCount:
+        print("InvalidEntryCount")
+    case kCMSampleBufferError_InvalidMediaTypeForOperation:
+        print("InvalidMediaTypeForOperation")
+    case kCMSampleBufferError_InvalidSampleData:
+        print("InvalidSampleData")
+    case kCMSampleBufferError_InvalidMediaFormat:
+        print("InvalidMediaFormat")
+    case kCMSampleBufferError_RequiredParameterMissing:
+        print("RequiredParameterMissing")
+    case kCMSampleBufferError_SampleIndexOutOfRange:
+        print("SampleIndexOutOfRange")
+    case kCMSampleBufferError_SampleTimingInfoInvalid:
+        print("SampleTimingInfoInvalid")
+    default:
+        if status != 0 {
+            print("Unknown status:", status)
+        }
+    }
+}
+
+func sampleBufferFromPixelBuffer(pixelBuffer: CVPixelBuffer, seconds: Double) -> CMSampleBuffer? {
+    let scale = CMTimeScale(1_000_000_000)
+    let time = CMTime(seconds: seconds, preferredTimescale: scale)
+    var timingInfo: CMSampleTimingInfo = CMSampleTimingInfo(duration: CMTime.invalid, presentationTimeStamp: time, decodeTimeStamp: CMTime.invalid)
+    var videoInfo: CMVideoFormatDescription? = nil
+    CMVideoFormatDescriptionCreateForImageBuffer(allocator: nil, imageBuffer: pixelBuffer, formatDescriptionOut: &videoInfo)
+    var sampleBuffer: CMSampleBuffer? = nil
+    let status = CMSampleBufferCreateForImageBuffer(allocator: kCFAllocatorDefault, imageBuffer: pixelBuffer, dataReady: true, makeDataReadyCallback: nil, refcon: nil, formatDescription: videoInfo!, sampleTiming: &timingInfo, sampleBufferOut: &sampleBuffer)
+    handleCMSampleBufferError(status: status)
+    guard let buffer = sampleBuffer else {
+        print("Failed to create sample buffer")
+        return nil
+    }
+    return buffer
+}
+
+extension simd_float4x4: Codable {
+    public init(from decoder: Decoder) throws {
+        var container = try decoder.unkeyedContainer()
+        try self.init(container.decode([SIMD4<Float>].self))
+    }
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.unkeyedContainer()
+        try container.encode([columns.0,columns.1, columns.2, columns.3])
+    }
 }
 
 extension matrix_float3x3: Codable {
@@ -29,8 +91,6 @@ extension matrix_float3x3: Codable {
     }
 }
 
-
-
 class LidarCameraCaptureData: Encodable {
     var depthImage: Data
     var colorImage: Data?
@@ -41,14 +101,16 @@ class LidarCameraCaptureData: Encodable {
     var pixelSize: Float
     
     init(depth: Data,
-         color: CVImageBuffer,
+         color: CVImageBuffer?,
          userAcceleration: [Double]?,
          userDirection: [Double]?,
          cameraIntrinsics: matrix_float3x3,
          cameraReferenceDimesnions: CGSize,
          pixelSize: Float) {
         self.depthImage = depth
-        self.colorImage = ImageHelpers.cvImageBufferToData(cvImageBuffer: color)
+        if let color = color {
+            self.colorImage = ImageHelpers.cvImageBufferToData(cvImageBuffer: color)
+        }
         self.userAcceleration = userAcceleration
         self.userDirection = userDirection
         self.cameraIntrinsics = cameraIntrinsics
@@ -67,12 +129,16 @@ class LidarCameraController: NSObject, ObservableObject, AVCaptureDataOutputSync
     private var depthOutput: AVCaptureDepthDataOutput!
     private var videoSync: AVCaptureDataOutputSynchronizer!
     
-    private let serverStreamer = ServerStreamer()
+    private var serverStreamer: ServerStreamer
     //private let audioServerStreamer = ServerStreamer(port: 10002)
 
     private var didPrintAudioFormat = false
     
     private var motionManager = CMMotionManager()
+    
+    var ips: [String]
+    @Published private(set) var ip: String
+    @Published private(set) var selectedIpIdx: Int
     
     var isFilteringEnabled = true {
         didSet {
@@ -86,6 +152,15 @@ class LidarCameraController: NSObject, ObservableObject, AVCaptureDataOutputSync
     }
     override init() {
         //CVMetalTextureCacheCreate(kCFAllocatorDefault, nil, MetalEnvironment.shared.metalDevice, nil, &textureCache)
+        let ips = getIP()
+        let selectedIpIdx = 0
+        let ip = ips[selectedIpIdx]
+        self.ip = ip
+        self.ips = ips
+        self.selectedIpIdx = selectedIpIdx
+        
+        self.serverStreamer = ServerStreamer(ip: ip, port: 10001)
+        
         super.init()
         print("Created LidarCameraController")
         self.setupDeviceMotion()
@@ -94,6 +169,17 @@ class LidarCameraController: NSObject, ObservableObject, AVCaptureDataOutputSync
         }
         catch {
             fatalError("Failed to setup lidar camera capture session")
+        }
+    }
+    
+    func changeIp(ip: String) {
+        if ip != self.ip {
+            self.stopStream()
+            self.serverStreamer.stopStreaming()
+            self.ip = ip
+            self.selectedIpIdx = self.ips.firstIndex(of: ip) ?? 0
+            self.serverStreamer = ServerStreamer(ip: ip, port: 10001)
+            self.startStream()
         }
     }
     
