@@ -11,6 +11,7 @@ import UIKit
 import SwiftUI
 
 
+
 final class CameraViewController: UIViewController {
     
     var lidarCameraController: LidarCameraController?
@@ -37,8 +38,9 @@ final class CameraViewController: UIViewController {
             print("No LidarCameraController")
             return
         }
+        self.previewLayer = lidarCameraController.cameraServer.getPreviewLayer()
         
-        self.previewLayer = AVCaptureVideoPreviewLayer(session: lidarCameraController.session)
+        //self.previewLayer = AVCaptureVideoPreviewLayer(session: lidarCameraController.session)
         guard let previewLayer = self.previewLayer else {
             print("Could not create preview layer")
             return
@@ -62,10 +64,10 @@ final class CameraViewController: UIViewController {
         let statusBarOrientation = UIApplication.shared.windows.first?.windowScene?.interfaceOrientation ?? .landscapeLeft
         var newAngle: CGFloat = 90.0
         if statusBarOrientation == .landscapeLeft {
-            newAngle = 0
+            newAngle = 180
         }
         else if statusBarOrientation == .landscapeRight {
-            newAngle = 180
+            newAngle = 0
         }
         else if statusBarOrientation == .portraitUpsideDown {
             newAngle = 270

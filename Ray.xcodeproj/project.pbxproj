@@ -7,6 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7E11DC662B999BE600B82C16 /* CameraServer.m in Sources */ = {isa = PBXBuildFile; fileRef = 7E11DC652B999BE600B82C16 /* CameraServer.m */; };
+		7E11DCAB2B999D8300B82C16 /* MP4Atom.m in Sources */ = {isa = PBXBuildFile; fileRef = 7E11DC9C2B999D8300B82C16 /* MP4Atom.m */; };
+		7E11DCAC2B999D8300B82C16 /* NALUnit.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7E11DC9F2B999D8300B82C16 /* NALUnit.cpp */; };
+		7E11DCAD2B999D8300B82C16 /* AVEncoder.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7E11DCA02B999D8300B82C16 /* AVEncoder.mm */; };
+		7E11DCAE2B999D8300B82C16 /* VideoEncoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 7E11DCA32B999D8300B82C16 /* VideoEncoder.m */; };
+		7E11DCAF2B999D8300B82C16 /* RTSPServer.m in Sources */ = {isa = PBXBuildFile; fileRef = 7E11DCA52B999D8300B82C16 /* RTSPServer.m */; };
+		7E11DCB02B999D8300B82C16 /* RTSPClientConnection.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7E11DCA92B999D8300B82C16 /* RTSPClientConnection.mm */; };
+		7E11DCB12B999D8300B82C16 /* RTSPMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 7E11DCAA2B999D8300B82C16 /* RTSPMessage.m */; };
 		7E15DA7428ECCE0B009923C5 /* LidarContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E15DA7328ECCE0B009923C5 /* LidarContentView.swift */; };
 		7E15DA7628ECCFDA009923C5 /* LidarCameraManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E15DA7528ECCFDA009923C5 /* LidarCameraManager.swift */; };
 		7E79813628E8DBFC0064DA4F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E79813528E8DBFC0064DA4F /* AppDelegate.swift */; };
@@ -42,6 +50,23 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		7E11DC642B999BE600B82C16 /* CameraServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CameraServer.h; sourceTree = "<group>"; };
+		7E11DC652B999BE600B82C16 /* CameraServer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CameraServer.m; sourceTree = "<group>"; };
+		7E11DC9A2B999D8300B82C16 /* H264_RTSP_Server_iOS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = H264_RTSP_Server_iOS.h; sourceTree = "<group>"; };
+		7E11DC9C2B999D8300B82C16 /* MP4Atom.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MP4Atom.m; sourceTree = "<group>"; };
+		7E11DC9D2B999D8300B82C16 /* AVEncoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AVEncoder.h; sourceTree = "<group>"; };
+		7E11DC9E2B999D8300B82C16 /* VideoEncoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VideoEncoder.h; sourceTree = "<group>"; };
+		7E11DC9F2B999D8300B82C16 /* NALUnit.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = NALUnit.cpp; sourceTree = "<group>"; };
+		7E11DCA02B999D8300B82C16 /* AVEncoder.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = AVEncoder.mm; sourceTree = "<group>"; };
+		7E11DCA12B999D8300B82C16 /* MP4Atom.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MP4Atom.h; sourceTree = "<group>"; };
+		7E11DCA22B999D8300B82C16 /* NALUnit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NALUnit.h; sourceTree = "<group>"; };
+		7E11DCA32B999D8300B82C16 /* VideoEncoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VideoEncoder.m; sourceTree = "<group>"; };
+		7E11DCA52B999D8300B82C16 /* RTSPServer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RTSPServer.m; sourceTree = "<group>"; };
+		7E11DCA62B999D8300B82C16 /* RTSPMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RTSPMessage.h; sourceTree = "<group>"; };
+		7E11DCA72B999D8300B82C16 /* RTSPClientConnection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RTSPClientConnection.h; sourceTree = "<group>"; };
+		7E11DCA82B999D8300B82C16 /* RTSPServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RTSPServer.h; sourceTree = "<group>"; };
+		7E11DCA92B999D8300B82C16 /* RTSPClientConnection.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = RTSPClientConnection.mm; sourceTree = "<group>"; };
+		7E11DCAA2B999D8300B82C16 /* RTSPMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RTSPMessage.m; sourceTree = "<group>"; };
 		7E15DA7328ECCE0B009923C5 /* LidarContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LidarContentView.swift; sourceTree = "<group>"; };
 		7E15DA7528ECCFDA009923C5 /* LidarCameraManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LidarCameraManager.swift; sourceTree = "<group>"; };
 		7E79813228E8DBFC0064DA4F /* Ray.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Ray.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -89,6 +114,44 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		7E11DC992B999D7200B82C16 /* H264-RTSP-Server-iOS */ = {
+			isa = PBXGroup;
+			children = (
+				7E11DC9B2B999D8300B82C16 /* AVEncoder */,
+				7E11DC9A2B999D8300B82C16 /* H264_RTSP_Server_iOS.h */,
+				7E11DCA42B999D8300B82C16 /* RTSP */,
+			);
+			path = "H264-RTSP-Server-iOS";
+			sourceTree = "<group>";
+		};
+		7E11DC9B2B999D8300B82C16 /* AVEncoder */ = {
+			isa = PBXGroup;
+			children = (
+				7E11DC9C2B999D8300B82C16 /* MP4Atom.m */,
+				7E11DC9D2B999D8300B82C16 /* AVEncoder.h */,
+				7E11DC9E2B999D8300B82C16 /* VideoEncoder.h */,
+				7E11DC9F2B999D8300B82C16 /* NALUnit.cpp */,
+				7E11DCA02B999D8300B82C16 /* AVEncoder.mm */,
+				7E11DCA12B999D8300B82C16 /* MP4Atom.h */,
+				7E11DCA22B999D8300B82C16 /* NALUnit.h */,
+				7E11DCA32B999D8300B82C16 /* VideoEncoder.m */,
+			);
+			path = AVEncoder;
+			sourceTree = "<group>";
+		};
+		7E11DCA42B999D8300B82C16 /* RTSP */ = {
+			isa = PBXGroup;
+			children = (
+				7E11DCA52B999D8300B82C16 /* RTSPServer.m */,
+				7E11DCA62B999D8300B82C16 /* RTSPMessage.h */,
+				7E11DCA72B999D8300B82C16 /* RTSPClientConnection.h */,
+				7E11DCA82B999D8300B82C16 /* RTSPServer.h */,
+				7E11DCA92B999D8300B82C16 /* RTSPClientConnection.mm */,
+				7E11DCAA2B999D8300B82C16 /* RTSPMessage.m */,
+			);
+			path = RTSP;
+			sourceTree = "<group>";
+		};
 		7E79812928E8DBFC0064DA4F = {
 			isa = PBXGroup;
 			children = (
@@ -114,11 +177,14 @@
 			isa = PBXGroup;
 			children = (
 				7E89ADCC28EA3D67003EACDB /* Info.plist */,
+				7E11DC642B999BE600B82C16 /* CameraServer.h */,
+				7E11DC652B999BE600B82C16 /* CameraServer.m */,
 				7E7F40492B918ED70020EA87 /* Queue2.swift */,
 				7EC103A12B8F380B00BBD875 /* StreamingSession2.swift */,
 				7EA083432B9054AB0030422A /* ServerStreamer2.swift */,
 				7EA083452B907DDE0030422A /* CameraViewController.swift */,
 				7E79813528E8DBFC0064DA4F /* AppDelegate.swift */,
+				7E11DC992B999D7200B82C16 /* H264-RTSP-Server-iOS */,
 				7E15DA7328ECCE0B009923C5 /* LidarContentView.swift */,
 				7E15DA7528ECCFDA009923C5 /* LidarCameraManager.swift */,
 				7E79816A28E8E7310064DA4F /* BridgingHeader.h */,
@@ -293,12 +359,20 @@
 			files = (
 				7E15DA7428ECCE0B009923C5 /* LidarContentView.swift in Sources */,
 				7EA083442B9054AB0030422A /* ServerStreamer2.swift in Sources */,
+				7E11DCAB2B999D8300B82C16 /* MP4Atom.m in Sources */,
+				7E11DC662B999BE600B82C16 /* CameraServer.m in Sources */,
+				7E11DCB02B999D8300B82C16 /* RTSPClientConnection.mm in Sources */,
 				7EC103A42B8F380C00BBD875 /* StreamingSession2.swift in Sources */,
+				7E11DCB12B999D8300B82C16 /* RTSPMessage.m in Sources */,
 				7E79813628E8DBFC0064DA4F /* AppDelegate.swift in Sources */,
 				7E79813A28E8DBFC0064DA4F /* Experience.rcproject in Sources */,
+				7E11DCAC2B999D8300B82C16 /* NALUnit.cpp in Sources */,
 				7E15DA7628ECCFDA009923C5 /* LidarCameraManager.swift in Sources */,
 				7E7F404A2B918ED70020EA87 /* Queue2.swift in Sources */,
 				7EA083462B907DDE0030422A /* CameraViewController.swift in Sources */,
+				7E11DCAF2B999D8300B82C16 /* RTSPServer.m in Sources */,
+				7E11DCAD2B999D8300B82C16 /* AVEncoder.mm in Sources */,
+				7E11DCAE2B999D8300B82C16 /* VideoEncoder.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

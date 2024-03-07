@@ -7,6 +7,23 @@
 
 import SwiftUI
 
+struct FocusSlider: View {
+    @State var depth: Float = 0.5
+    @StateObject var lidarCameraController: LidarCameraController
+    
+    var body: some View {
+        VStack {
+            Spacer()
+            Slider(value: $depth, in: 0...1, onEditingChanged: { editing in
+                print("New value: \(depth) editing:\(editing)")
+                self.lidarCameraController.setFocusDepth(depth: depth)
+            })
+            Text("\(depth)")
+        }
+        .padding(.horizontal)
+    }
+}
+
 struct LidarDepthView: View {
     @StateObject var lidarCameraController: LidarCameraController
     
@@ -52,6 +69,7 @@ struct LidarContentView: View {
             ZStack {
                 LidarColorView(lidarCameraController: lidarCameraController)
                 LidarDepthView(lidarCameraController: lidarCameraController)
+                FocusSlider(lidarCameraController: lidarCameraController)
             }
         }
         .onAppear(perform: {

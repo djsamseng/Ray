@@ -9,5 +9,6 @@
 #define BridgingHeader_h
 
 #include <ifaddrs.h>
+#include "CameraServer.h"
 
 #endif /* BridgingHeader_h */
